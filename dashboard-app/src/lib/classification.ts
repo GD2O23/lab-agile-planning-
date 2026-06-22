@@ -52,24 +52,14 @@ export function statusKey(s: unknown): string {
   return v || "unspecified";
 }
 
-/** Faithful port of priorityCode(p) */
+/** Maps Helix priority values (Critical/High/Medium/Low, or numeric/P-prefixed equivalents) to P1-P4. */
 export function priorityCode(p: unknown): string {
   const v = norm(p).toLowerCase();
   if (!v) return "";
   if (v === "p1" || v === "1" || v.includes("critical") || v.startsWith("1-")) return "P1";
   if (v === "p2" || v === "2" || v.includes("high") || v.startsWith("2-")) return "P2";
-  if (
-    v === "p3" ||
-    v === "3" ||
-    v.includes("medium") ||
-    v.includes("low") ||
-    v.startsWith("3-") ||
-    v.startsWith("4-") ||
-    v.startsWith("5-") ||
-    v === "p4" ||
-    v === "p5"
-  )
-    return "P3";
+  if (v === "p3" || v === "3" || v.includes("medium") || v.startsWith("3-")) return "P3";
+  if (v === "p4" || v === "4" || v === "5" || v.includes("low") || v.startsWith("4-") || v.startsWith("5-")) return "P4";
   return norm(p);
 }
 
