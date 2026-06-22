@@ -211,7 +211,7 @@ export async function exportManagementPack(
   exec.mergeCells(govRow.number, 5, govRow.number, COLS);
   govRow.getCell(1).value = "Closure Review";
   govRow.getCell(3).value = "Pending";
-  govRow.getCell(5).value = "% Pending Ready";
+  govRow.getCell(5).value = "% Pending Ready to Close";
   const govValRow = exec.addRow([]);
   govValRow.height = 30;
   exec.mergeCells(govValRow.number, 1, govValRow.number, 2);
@@ -227,6 +227,10 @@ export async function exportManagementPack(
       r.getCell(c).alignment = { horizontal: c === 5 ? "left" : "center" };
     });
   });
+  const govNoteRow = exec.addRow([]);
+  exec.mergeCells(govNoteRow.number, 1, govNoteRow.number, COLS);
+  govNoteRow.getCell(1).value = "% Pending Ready to Close = share of Pending tickets already in Closure Review (i.e. awaiting only client confirmation, work is otherwise complete).";
+  govNoteRow.getCell(1).font = { italic: true, size: 10, color: { argb: "FF64748B" } };
   exec.addRow([]);
 
   styleSectionLabel(exec, exec.addRow([]), "Report Scope", COLS);
