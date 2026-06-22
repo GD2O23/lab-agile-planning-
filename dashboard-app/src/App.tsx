@@ -82,7 +82,7 @@ function App() {
 
   return (
     <>
-      <header>
+      <header className="app-header">
         <div className="brand">
           <div>
             <h1>SBB Incident Intelligence Platform</h1>
