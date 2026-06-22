@@ -5,7 +5,7 @@ import { IncidentTable } from "../common/IncidentTable";
 import { BarChartCard } from "../common/BarChart";
 import { uniqueSorted } from "../../lib/uniqueSorted";
 import { isClosureReview, isOpen, isPending, statusKey } from "../../lib/classification";
-import { exportRowsAsXlsx } from "../../lib/exports";
+import { exportManagementPack } from "../../lib/exports";
 import { personName } from "../../lib/processRows";
 import {
   agingItems,
@@ -96,7 +96,25 @@ export function ManagementTab() {
       <section className="panel">
         <div className="panel-header">
           <h2>Management View</h2>
-          <button onClick={() => exportRowsAsXlsx(datasetRows, "Management_Pack")}>Export Management Pack</button>
+          <button
+            onClick={() =>
+              exportManagementPack(datasetRows, detail.length ? detail : datasetRows, {
+                isOpenFn: isOpen,
+                isPendingFn: isPending,
+                isClosureReviewFn: isClosureReview,
+                dataset: management.dataset,
+                company: management.company || "All",
+                appliedFilters: [
+                  ["Dataset", management.dataset],
+                  ["Company", management.company || "All"],
+                  ["Row field", management.row],
+                  ["Column field", management.column],
+                ],
+              })
+            }
+          >
+            Export Management Pack
+          </button>
         </div>
         <div className="panel-body">
           <div className="filter-grid">

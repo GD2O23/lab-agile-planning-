@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useDashboardStore } from "../../store/useDashboardStore";
 import { uniqueSorted } from "../../lib/uniqueSorted";
-import { exportRowsAsXlsx } from "../../lib/exports";
+import { exportManagementPack, exportRowsAsXlsx } from "../../lib/exports";
 import { getSavedViews, saveView, deleteView } from "../../lib/savedViews";
-import { isClosureReview, isOpen } from "../../lib/classification";
+import { isClosureReview, isOpen, isPending } from "../../lib/classification";
 import type { FilterKey } from "../../types";
 import { useFilteredRows } from "../../lib/selectors";
 
@@ -208,6 +208,21 @@ export function ControlCentre() {
                 onClick={() => exportRowsAsXlsx(rows.filter((r) => isOpen(r) && r.daysSinceUpdated != null && r.daysSinceUpdated >= 14), "Stale_14_Plus")}
               >
                 Export Stale 14+
+              </button>
+              <button
+                className="action-btn secondary"
+                onClick={() =>
+                  exportManagementPack(currentViewRows, currentViewRows, {
+                    isOpenFn: isOpen,
+                    isPendingFn: isPending,
+                    isClosureReviewFn: isClosureReview,
+                    dataset: management.dataset,
+                    company: management.company || "All",
+                    appliedFilters: FILTER_DEFS.filter((d) => filters[d.key].length).map((d) => [d.label, filters[d.key].join(", ")]),
+                  })
+                }
+              >
+                Export Management Pack
               </button>
             </div>
             <p className="small-note">Exports respect the current tab, filters, include/exclude selections and drill-through context where applicable.</p>
