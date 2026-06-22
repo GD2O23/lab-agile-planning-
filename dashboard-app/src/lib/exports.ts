@@ -1,7 +1,10 @@
 import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import type { IncidentRow } from "../types";
 import { dateDisplay } from "./dates";
 import { personName } from "./processRows";
+import { statusItems, priorityItems, groupItems, pendingReasonItems } from "./aggregations";
+import { renderBarChartImage } from "./chartImage";
 
 const DETAIL_COLUMNS: [keyof IncidentRow | "personName", string][] = [
   ["ticketNumber", "Incident ID"],
@@ -82,14 +85,46 @@ export function managementPackMetrics(rows: IncidentRow[], isOpenFn: (r: Inciden
   ];
 }
 
+const NAVY = "FF00384D";
+const BLUE = "FF2563EB";
+const WHITE = "FFFFFFFF";
+const RED_FILL = "FFFDE7E4";
+const RED_TEXT = "FFB42318";
+const AMBER_FILL = "FFFFF4CC";
+const AMBER_TEXT = "FF7A4B00";
+const GREEN_FILL = "FFE3F8E8";
+const GREEN_TEXT = "FF1E7A4D";
+const STRIPE_FILL = "FFF8FAFC";
+
+function ragForMetric(label: string, value: number): { fill: string; text: string } | null {
+  if (/^aging 14\+|^stale 14\+|^stale 30\+/i.test(label)) return value > 0 ? { fill: RED_FILL, text: RED_TEXT } : { fill: GREEN_FILL, text: GREEN_TEXT };
+  if (/^aging 5\+/i.test(label)) return value > 0 ? { fill: AMBER_FILL, text: AMBER_TEXT } : { fill: GREEN_FILL, text: GREEN_TEXT };
+  if (/^closure review/i.test(label)) return value > 0 ? { fill: AMBER_FILL, text: AMBER_TEXT } : { fill: GREEN_FILL, text: GREEN_TEXT };
+  return null;
+}
+
+function styleHeaderRow(row: ExcelJS.Row, fillColor = NAVY) {
+  row.eachCell((cell) => {
+    cell.font = { bold: true, color: { argb: WHITE } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: fillColor } };
+    cell.alignment = { vertical: "middle" };
+  });
+}
+
+function styleTitleRow(row: ExcelJS.Row, size = 16) {
+  row.eachCell((cell) => {
+    cell.font = { bold: true, size, color: { argb: NAVY } };
+  });
+}
+
 /**
- * Port of exportManagementCsv(): 3-sheet workbook (Executive Summary,
- * Operational Summary, Ticket Detail), using SheetJS writer instead of the
- * old app's hand-rolled OOXML/ZIP builder. Styling (fonts/fills) from the old
- * app is dropped since SheetJS community edition doesn't carry cell styles
- * through json_to_sheet; content/structure is preserved.
+ * 3-sheet workbook (Executive Summary, Operational Summary, Ticket Detail)
+ * built with ExcelJS for cell styling/RAG colour-coding and embedded chart
+ * images, matching the visual "premium" feel of the legacy hand-rolled
+ * OOXML export (which SheetJS community edition cannot reproduce, since it
+ * can't write cell styles or charts).
  */
-export function exportManagementPack(
+export async function exportManagementPack(
   summaryRows: IncidentRow[],
   detailRows: IncidentRow[],
   opts: {
@@ -100,30 +135,60 @@ export function exportManagementPack(
     company: string;
     appliedFilters: [string, string][];
   },
-): void {
+): Promise<void> {
   const metrics = managementPackMetrics(summaryRows, opts.isOpenFn, opts.isPendingFn, opts.isClosureReviewFn);
   const closure = metrics.find((m) => m.label === "Closure Review")?.value ?? 0;
   const pending = metrics.find((m) => m.label === "Pending Work")?.value ?? 0;
   const pct = pending ? Math.round((closure / pending) * 100) : 0;
   const generated = new Date().toLocaleString(undefined, { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
-  const execRows: (string | number)[][] = [
-    ["SBB Incident Intelligence Platform"],
-    ["Management Pack"],
-    ["Export Generated", generated, "Dataset", opts.dataset, "Company", opts.company, "Summary Records", summaryRows.length],
-    ["Ticket Detail Records", detailRows.length],
-    [],
-    ["Key Operational Metrics"],
-    ...metrics.map((m) => [m.label, m.value]),
-    [],
-    ["Governance Focus"],
-    ["Closure Review", closure, "Pending", pending, "% Pending Ready", pct + "%"],
-    [],
-    ["Report Scope"],
-    ...opts.appliedFilters.map(([k, v]) => [k, v]),
-  ];
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "SBB Incident Intelligence Platform";
+  wb.created = new Date();
 
-  const sections: [string, [string, number][]][] = [
+  // --- Executive Summary ---
+  const exec = wb.addWorksheet("Executive Summary");
+  exec.columns = [{ width: 26 }, { width: 18 }, { width: 22 }, { width: 18 }, { width: 18 }, { width: 16 }];
+  styleTitleRow(exec.addRow(["SBB Incident Intelligence Platform"]), 18);
+  exec.addRow(["Management Pack"]).font = { bold: true, size: 13, color: { argb: BLUE } };
+  exec.addRow([]);
+  exec.addRow(["Export Generated", generated]);
+  exec.addRow(["Dataset", opts.dataset, "Company", opts.company]);
+  exec.addRow(["Summary Records", summaryRows.length, "Ticket Detail Records", detailRows.length]);
+  exec.addRow([]);
+  styleHeaderRow(exec.addRow(["Key Operational Metric", "Value"]));
+  metrics.forEach((m) => {
+    const row = exec.addRow([m.label, m.value]);
+    const rag = ragForMetric(m.label, m.value);
+    if (rag) {
+      row.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: rag.fill } };
+      row.getCell(2).fill = { type: "pattern", pattern: "solid", fgColor: { argb: rag.fill } };
+      row.getCell(1).font = { bold: true, color: { argb: rag.text } };
+      row.getCell(2).font = { bold: true, color: { argb: rag.text } };
+    }
+  });
+  exec.addRow([]);
+  styleHeaderRow(exec.addRow(["Governance Focus", "", "", "", "", ""]));
+  const govRow = exec.addRow(["Closure Review", closure, "Pending", pending, "% Pending Ready", pct + "%"]);
+  const govRag = pct >= 50 ? { fill: GREEN_FILL, text: GREEN_TEXT } : closure > 0 ? { fill: AMBER_FILL, text: AMBER_TEXT } : { fill: GREEN_FILL, text: GREEN_TEXT };
+  [5, 6].forEach((c) => {
+    govRow.getCell(c).fill = { type: "pattern", pattern: "solid", fgColor: { argb: govRag.fill } };
+    govRow.getCell(c).font = { bold: true, color: { argb: govRag.text } };
+  });
+  exec.addRow([]);
+  styleHeaderRow(exec.addRow(["Report Scope", "", "", "", "", ""]));
+  opts.appliedFilters.length
+    ? opts.appliedFilters.forEach(([k, v]) => exec.addRow([k, v]))
+    : exec.addRow(["No filters applied", "All loaded data"]);
+
+  // --- Operational Summary (breakdown tables + chart images) ---
+  const op = wb.addWorksheet("Operational Summary");
+  op.columns = [{ width: 30 }, { width: 14 }, { width: 4 }, { width: 30 }, { width: 14 }];
+  styleTitleRow(op.addRow(["Operational Summary"]), 16);
+  op.addRow(["Records", summaryRows.length]);
+  op.addRow([]);
+
+  const breakdowns: [string, [string, number][]][] = [
     ["Status Breakdown", countMapForExport(summaryRows, (r) => r.status || "Unspecified")],
     ["Priority Breakdown", countMapForExport(summaryRows, (r) => r.priority || "Unspecified")],
     ["Work Type Breakdown", countMapForExport(summaryRows, (r) => r.workType || "Unclassified")],
@@ -131,17 +196,95 @@ export function exportManagementPack(
     ["Pending Reason Breakdown", countMapForExport(summaryRows.filter(opts.isPendingFn), (r) => r.subStatus || "Unspecified")],
     ["Company Breakdown", countMapForExport(summaryRows, (r) => r.company || "Unspecified")],
   ];
-  const opRows: (string | number)[][] = [["Operational Summary"], ["Records", summaryRows.length], []];
-  sections.forEach(([title, items]) => {
-    opRows.push([title]);
-    opRows.push(["Item", "Count"]);
-    items.forEach(([k, v]) => opRows.push([k, v]));
-    opRows.push([]);
-  });
 
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(execRows), "Executive Summary");
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(opRows), "Operational Summary");
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(detailRows.map(rowToExportRecord)), "Ticket Detail");
-  XLSX.writeFile(wb, `SBB_Incident_Management_Pack_${currentDateStamp()}.xlsx`);
+  let cursorRow = op.lastRow ? op.lastRow.number + 1 : 4;
+  for (let i = 0; i < breakdowns.length; i += 2) {
+    const left = breakdowns[i];
+    const right = breakdowns[i + 1];
+    const titleRow = op.getRow(cursorRow);
+    titleRow.getCell(1).value = left[0];
+    titleRow.getCell(1).font = { bold: true, size: 12, color: { argb: NAVY } };
+    if (right) {
+      titleRow.getCell(4).value = right[0];
+      titleRow.getCell(4).font = { bold: true, size: 12, color: { argb: NAVY } };
+    }
+    cursorRow += 1;
+    styleHeaderRow(op.getRow(cursorRow), BLUE);
+    op.getRow(cursorRow).getCell(1).value = "Item";
+    op.getRow(cursorRow).getCell(2).value = "Count";
+    if (right) {
+      op.getRow(cursorRow).getCell(4).value = "Item";
+      op.getRow(cursorRow).getCell(5).value = "Count";
+    }
+    cursorRow += 1;
+    const maxLen = Math.max(left[1].length, right ? right[1].length : 0);
+    for (let j = 0; j < maxLen; j++) {
+      const row = op.getRow(cursorRow + j);
+      if (left[1][j]) {
+        row.getCell(1).value = left[1][j][0];
+        row.getCell(2).value = left[1][j][1];
+      }
+      if (right && right[1][j]) {
+        row.getCell(4).value = right[1][j][0];
+        row.getCell(5).value = right[1][j][1];
+      }
+      if (j % 2 === 1) {
+        row.getCell(1).fill = row.getCell(2).fill = { type: "pattern", pattern: "solid", fgColor: { argb: STRIPE_FILL } };
+        if (right) row.getCell(4).fill = row.getCell(5).fill = { type: "pattern", pattern: "solid", fgColor: { argb: STRIPE_FILL } };
+      }
+    }
+    cursorRow += maxLen + 1;
+  }
+
+  cursorRow += 1;
+  const chartTitleRow = op.getRow(cursorRow);
+  chartTitleRow.getCell(1).value = "Reporting Charts";
+  chartTitleRow.getCell(1).font = { bold: true, size: 14, color: { argb: NAVY } };
+  cursorRow += 1;
+
+  const chartSpecs: [string, ReturnType<typeof statusItems>][] = [
+    ["Status mix", statusItems(summaryRows)],
+    ["Priority mix", priorityItems(summaryRows)],
+    ["Operational group mix", groupItems(summaryRows)],
+    ["Pending reason mix", pendingReasonItems(summaryRows)],
+  ];
+  for (const [title, items] of chartSpecs) {
+    const dataUrl = renderBarChartImage(title, items);
+    if (!dataUrl) continue;
+    const imageId = wb.addImage({ base64: dataUrl, extension: "png" });
+    op.addImage(imageId, { tl: { col: 0, row: cursorRow }, ext: { width: 480, height: 240 } });
+    cursorRow += 14;
+  }
+
+  // --- Ticket Detail ---
+  const detail = wb.addWorksheet("Ticket Detail");
+  const detailHeaders = DETAIL_COLUMNS.map(([, label]) => label);
+  styleHeaderRow(detail.addRow(detailHeaders), NAVY);
+  detail.columns = detailHeaders.map((h) => ({ width: h === "Description" ? 50 : 18 }));
+  detailRows.forEach((r) => {
+    const rec = rowToExportRecord(r);
+    const row = detail.addRow(detailHeaders.map((h) => rec[h]));
+    const priorityCell = row.getCell(detailHeaders.indexOf("Priority") + 1);
+    const priority = String(rec["Priority"] || "");
+    if (priority === "P1") {
+      priorityCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: RED_FILL } };
+      priorityCell.font = { bold: true, color: { argb: RED_TEXT } };
+    } else if (priority === "P2") {
+      priorityCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: AMBER_FILL } };
+      priorityCell.font = { bold: true, color: { argb: AMBER_TEXT } };
+    }
+  });
+  detail.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: detailHeaders.length } };
+  detail.views = [{ state: "frozen", ySplit: 1 }];
+
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `SBB_Incident_Management_Pack_${currentDateStamp()}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }

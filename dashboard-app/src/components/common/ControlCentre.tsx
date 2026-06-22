@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDashboardStore } from "../../store/useDashboardStore";
 import { uniqueSorted } from "../../lib/uniqueSorted";
 import { exportManagementPack, exportRowsAsXlsx } from "../../lib/exports";
@@ -19,6 +19,63 @@ const FILTER_DEFS: { key: FilterKey; label: string; field: (r: { company: string
 ];
 
 type DrawerId = "filters" | "views" | "exports" | null;
+
+function FilterPicker({
+  label,
+  values,
+  selected,
+  mode,
+  onToggle,
+  onModeChange,
+}: {
+  label: string;
+  values: string[];
+  selected: string[];
+  mode: "include" | "exclude";
+  onToggle: (value: string) => void;
+  onModeChange: (mode: "include" | "exclude") => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onDocClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("click", onDocClick);
+    return () => document.removeEventListener("click", onDocClick);
+  }, [open]);
+
+  const summary = selected.length ? selected.join(", ") : `All ${label.toLowerCase()}`;
+
+  return (
+    <div>
+      <label>{label}</label>
+      <div className="filter-picker" ref={ref}>
+        <button type="button" className="filter-picker-btn" onClick={() => setOpen((o) => !o)}>
+          <span className={selected.length ? "filter-summary-value" : "filter-summary-muted"}>{summary}</span>
+        </button>
+        <div className="filter-menu">
+          <select className={`filter-mode ${mode === "exclude" ? "exclude" : ""}`} value={mode} onChange={(e) => onModeChange(e.target.value as "include" | "exclude")}>
+            <option value="include">Include selected</option>
+            <option value="exclude">Exclude selected</option>
+          </select>
+          {values.length ? (
+            values.map((v) => (
+              <label key={v} className="filter-option">
+                <input type="checkbox" checked={selected.includes(v)} onChange={() => onToggle(v)} />
+                <span>{v}</span>
+              </label>
+            ))
+          ) : (
+            <div className="small-note">No values loaded yet.</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function ControlCentre() {
   const [drawer, setDrawer] = useState<DrawerId>(null);
@@ -101,32 +158,15 @@ export function ControlCentre() {
               {FILTER_DEFS.map((def) => {
                 const values = uniqueSorted(rows.map(def.field));
                 return (
-                  <div key={def.key}>
-                    <label>{def.label}</label>
-                    <div className="filter-control">
-                      <select
-                        multiple
-                        className="filter-multiselect"
-                        value={filters[def.key]}
-                        onChange={(e) => setFilters({ [def.key]: Array.from(e.target.selectedOptions).map((o) => o.value) } as Partial<typeof filters>)}
-                      >
-                        {values.map((v) => (
-                          <option key={v} value={v} onClick={() => toggleValue(def.key, v)}>
-                            {v}
-                          </option>
-                        ))}
-                      </select>
-                      <select
-                        className={`filter-mode ${filterModes[def.key] === "exclude" ? "exclude" : ""}`}
-                        value={filterModes[def.key]}
-                        onChange={(e) => setFilterMode(def.key, e.target.value as "include" | "exclude")}
-                      >
-                        <option value="include">Include</option>
-                        <option value="exclude">Exclude</option>
-                      </select>
-                    </div>
-                    <div className="filter-help">Ctrl/Cmd-click to multi-select</div>
-                  </div>
+                  <FilterPicker
+                    key={def.key}
+                    label={def.label}
+                    values={values}
+                    selected={filters[def.key]}
+                    mode={filterModes[def.key]}
+                    onToggle={(v) => toggleValue(def.key, v)}
+                    onModeChange={(m) => setFilterMode(def.key, m)}
+                  />
                 );
               })}
               <div>
