@@ -52,7 +52,7 @@ function FilterPicker({
   return (
     <div>
       <label>{label}</label>
-      <div className="filter-picker" ref={ref}>
+      <div className={`filter-picker ${open ? "open" : ""}`} ref={ref}>
         <button type="button" className="filter-picker-btn" onClick={() => setOpen((o) => !o)}>
           <span className={selected.length ? "filter-summary-value" : "filter-summary-muted"}>{summary}</span>
         </button>

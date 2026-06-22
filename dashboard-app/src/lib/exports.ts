@@ -111,10 +111,22 @@ function styleHeaderRow(row: ExcelJS.Row, fillColor = NAVY) {
   });
 }
 
-function styleTitleRow(row: ExcelJS.Row, size = 16) {
-  row.eachCell((cell) => {
-    cell.font = { bold: true, size, color: { argb: NAVY } };
-  });
+function styleTitleBand(sheet: ExcelJS.Worksheet, row: ExcelJS.Row, text: string, span: number, opts: { size?: number; bg?: string; color?: string } = {}) {
+  row.getCell(1).value = text;
+  sheet.mergeCells(row.number, 1, row.number, span);
+  row.height = (opts.size ?? 16) + 14;
+  row.getCell(1).font = { bold: true, size: opts.size ?? 16, color: { argb: opts.color ?? WHITE } };
+  row.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: opts.bg ?? NAVY } };
+  row.getCell(1).alignment = { vertical: "middle" };
+  for (let c = 2; c <= span; c++) {
+    row.getCell(c).fill = { type: "pattern", pattern: "solid", fgColor: { argb: opts.bg ?? NAVY } };
+  }
+}
+
+function styleSectionLabel(sheet: ExcelJS.Worksheet, row: ExcelJS.Row, text: string, span: number) {
+  row.getCell(1).value = text;
+  sheet.mergeCells(row.number, 1, row.number, span);
+  row.getCell(1).font = { bold: true, size: 13, color: { argb: NAVY } };
 }
 
 /**
@@ -146,46 +158,91 @@ export async function exportManagementPack(
   wb.creator = "SBB Incident Intelligence Platform";
   wb.created = new Date();
 
+  const COLS = 8;
+
   // --- Executive Summary ---
   const exec = wb.addWorksheet("Executive Summary");
-  exec.columns = [{ width: 26 }, { width: 18 }, { width: 22 }, { width: 18 }, { width: 18 }, { width: 16 }];
-  styleTitleRow(exec.addRow(["SBB Incident Intelligence Platform"]), 18);
-  exec.addRow(["Management Pack"]).font = { bold: true, size: 13, color: { argb: BLUE } };
+  exec.columns = [{ width: 22 }, { width: 14 }, { width: 22 }, { width: 14 }, { width: 22 }, { width: 14 }, { width: 18 }, { width: 14 }];
+
+  styleTitleBand(exec, exec.addRow([]), "SBB Incident Intelligence Platform", COLS, { size: 18 });
+  styleTitleBand(exec, exec.addRow([]), "Management Pack", COLS, { size: 13, bg: BLUE });
   exec.addRow([]);
-  exec.addRow(["Export Generated", generated]);
-  exec.addRow(["Dataset", opts.dataset, "Company", opts.company]);
-  exec.addRow(["Summary Records", summaryRows.length, "Ticket Detail Records", detailRows.length]);
+
+  const metaRow1 = exec.addRow(["Export Generated", generated, "Dataset", opts.dataset]);
+  metaRow1.getCell(1).font = { bold: true };
+  metaRow1.getCell(3).font = { bold: true };
+  const metaRow2 = exec.addRow(["Company", opts.company, "Summary Records", summaryRows.length, "Ticket Detail Records", detailRows.length]);
+  metaRow2.getCell(1).font = { bold: true };
+  metaRow2.getCell(3).font = { bold: true };
+  metaRow2.getCell(5).font = { bold: true };
   exec.addRow([]);
-  styleHeaderRow(exec.addRow(["Key Operational Metric", "Value"]));
-  metrics.forEach((m) => {
-    const row = exec.addRow([m.label, m.value]);
-    const rag = ragForMetric(m.label, m.value);
-    if (rag) {
-      row.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: rag.fill } };
-      row.getCell(2).fill = { type: "pattern", pattern: "solid", fgColor: { argb: rag.fill } };
-      row.getCell(1).font = { bold: true, color: { argb: rag.text } };
-      row.getCell(2).font = { bold: true, color: { argb: rag.text } };
-    }
-  });
+
+  styleSectionLabel(exec, exec.addRow([]), "Key Operational Metrics", COLS);
+  for (let i = 0; i < metrics.length; i += 4) {
+    const group = metrics.slice(i, i + 4);
+    const labelRow = exec.addRow([]);
+    const valueRow = exec.addRow([]);
+    valueRow.height = 30;
+    group.forEach((m, idx) => {
+      const c1 = idx * 2 + 1;
+      const c2 = c1 + 1;
+      const rag = ragForMetric(m.label, m.value);
+      const bg = rag?.fill ?? "FFEFF4F8";
+      const fg = rag?.text ?? NAVY;
+      exec.mergeCells(labelRow.number, c1, labelRow.number, c2);
+      exec.mergeCells(valueRow.number, c1, valueRow.number, c2);
+      labelRow.getCell(c1).value = m.label;
+      labelRow.getCell(c1).font = { bold: true, color: { argb: fg } };
+      labelRow.getCell(c1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: bg } };
+      valueRow.getCell(c1).value = m.value;
+      valueRow.getCell(c1).font = { bold: true, size: 20, color: { argb: fg } };
+      valueRow.getCell(c1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: bg } };
+      valueRow.getCell(c1).alignment = { horizontal: "center" };
+    });
+  }
   exec.addRow([]);
-  styleHeaderRow(exec.addRow(["Governance Focus", "", "", "", "", ""]));
-  const govRow = exec.addRow(["Closure Review", closure, "Pending", pending, "% Pending Ready", pct + "%"]);
+
+  styleSectionLabel(exec, exec.addRow([]), "Governance Focus", COLS);
   const govRag = pct >= 50 ? { fill: GREEN_FILL, text: GREEN_TEXT } : closure > 0 ? { fill: AMBER_FILL, text: AMBER_TEXT } : { fill: GREEN_FILL, text: GREEN_TEXT };
-  [5, 6].forEach((c) => {
-    govRow.getCell(c).fill = { type: "pattern", pattern: "solid", fgColor: { argb: govRag.fill } };
-    govRow.getCell(c).font = { bold: true, color: { argb: govRag.text } };
+  const govRow = exec.addRow([]);
+  govRow.height = 30;
+  exec.mergeCells(govRow.number, 1, govRow.number, 2);
+  exec.mergeCells(govRow.number, 3, govRow.number, 4);
+  exec.mergeCells(govRow.number, 5, govRow.number, COLS);
+  govRow.getCell(1).value = "Closure Review";
+  govRow.getCell(3).value = "Pending";
+  govRow.getCell(5).value = "% Pending Ready";
+  const govValRow = exec.addRow([]);
+  govValRow.height = 30;
+  exec.mergeCells(govValRow.number, 1, govValRow.number, 2);
+  exec.mergeCells(govValRow.number, 3, govValRow.number, 4);
+  exec.mergeCells(govValRow.number, 5, govValRow.number, COLS);
+  govValRow.getCell(1).value = closure;
+  govValRow.getCell(3).value = pending;
+  govValRow.getCell(5).value = pct + "%";
+  [govRow, govValRow].forEach((r) => {
+    [1, 3, 5].forEach((c) => {
+      r.getCell(c).fill = { type: "pattern", pattern: "solid", fgColor: { argb: govRag.fill } };
+      r.getCell(c).font = { bold: true, size: r === govValRow ? 18 : 12, color: { argb: govRag.text } };
+      r.getCell(c).alignment = { horizontal: c === 5 ? "left" : "center" };
+    });
   });
   exec.addRow([]);
-  styleHeaderRow(exec.addRow(["Report Scope", "", "", "", "", ""]));
-  opts.appliedFilters.length
-    ? opts.appliedFilters.forEach(([k, v]) => exec.addRow([k, v]))
-    : exec.addRow(["No filters applied", "All loaded data"]);
+
+  styleSectionLabel(exec, exec.addRow([]), "Report Scope", COLS);
+  const scopeRows: [string, string][] = opts.appliedFilters.length ? opts.appliedFilters : [["No filters applied", "All loaded data"]];
+  scopeRows.forEach(([k, v]) => {
+    const r = exec.addRow([k]);
+    r.getCell(1).font = { bold: true };
+    exec.mergeCells(r.number, 2, r.number, COLS);
+    r.getCell(2).value = v;
+  });
 
   // --- Operational Summary (breakdown tables + chart images) ---
   const op = wb.addWorksheet("Operational Summary");
   op.columns = [{ width: 30 }, { width: 14 }, { width: 4 }, { width: 30 }, { width: 14 }];
-  styleTitleRow(op.addRow(["Operational Summary"]), 16);
-  op.addRow(["Records", summaryRows.length]);
+  styleTitleBand(op, op.addRow([]), "Operational Summary", 5, { size: 16 });
+  op.addRow(["Records", summaryRows.length]).getCell(1).font = { bold: true };
   op.addRow([]);
 
   const breakdowns: [string, [string, number][]][] = [
