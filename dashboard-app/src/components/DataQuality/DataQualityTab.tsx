@@ -4,6 +4,7 @@ import { useFilteredRows } from "../../lib/selectors";
 import { IncidentTable } from "../common/IncidentTable";
 import { dataQualityIssues } from "../../lib/dataQuality";
 import { MetricCard } from "../common/MetricCard";
+import { isClosureReview, isOpen, isPending } from "../../lib/classification";
 import type { DataQualityIssue, IncidentRow } from "../../types";
 
 const ISSUE_LIST: DataQualityIssue[] = [
@@ -29,6 +30,22 @@ export function DataQualityTab() {
   }, [issuesByRow]);
   const totalExceptionRows = issuesByRow.filter((x) => x.issues.length > 0).length;
 
+  /** Faithful port of renderKpiIntegrityHealth() */
+  const kpiIssues = useMemo(() => {
+    const open = rows.filter(isOpen).length;
+    const pending = rows.filter(isPending).length;
+    const closure = rows.filter(isClosureReview).length;
+    const aging5 = rows.filter((r) => isOpen(r) && r.daysOpen != null && r.daysOpen >= 5).length;
+    const aging14 = rows.filter((r) => isOpen(r) && r.daysOpen != null && r.daysOpen >= 14).length;
+    const stale14 = rows.filter((r) => isOpen(r) && r.daysSinceUpdated != null && r.daysSinceUpdated >= 14).length;
+    const issues: string[] = [];
+    if (closure > pending) issues.push("Closure Review exceeds Pending");
+    if (aging14 > aging5) issues.push("Aging 14+ exceeds Aging 5+");
+    if (aging5 > open) issues.push("Aging 5+ exceeds Open Active Work");
+    if (stale14 > open) issues.push("Stale 14+ exceeds Open Active Work");
+    return issues;
+  }, [rows]);
+
   let detail: IncidentRow[] = [];
   if (tabDrill.kind === "dataQuality") {
     detail = tabDrill.issue === "any"
@@ -38,6 +55,21 @@ export function DataQualityTab() {
 
   return (
     <>
+      {rows.length > 0 && (
+        <section className="panel">
+          <div className="panel-header">
+            <h2>KPI Integrity Health</h2>
+            <span className="muted">Cross-metric logical consistency checks</span>
+          </div>
+          <div className="panel-body">
+            <div className={kpiIssues.length ? "mapping-warning" : "mapping-ok"}>
+              {kpiIssues.length
+                ? `KPI integrity issues detected: ${kpiIssues.join("; ")}.`
+                : "KPI integrity OK: no logical inconsistencies detected across the current filtered dataset."}
+            </div>
+          </div>
+        </section>
+      )}
       <section className="panel">
         <div className="panel-header">
           <h2>Data Quality Dashboard</h2>
