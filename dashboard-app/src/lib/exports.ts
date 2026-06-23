@@ -334,6 +334,15 @@ export async function exportManagementPack(
       priorityCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: AMBER_FILL } };
       priorityCell.font = { bold: true, color: { argb: AMBER_TEXT } };
     }
+    const staleCell = row.getCell(detailHeaders.indexOf("Last Update Age") + 1);
+    const daysSinceUpdated = r.daysSinceUpdated;
+    if (daysSinceUpdated != null && daysSinceUpdated >= 14) {
+      staleCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: RED_FILL } };
+      staleCell.font = { bold: true, color: { argb: RED_TEXT } };
+    } else if (daysSinceUpdated != null && daysSinceUpdated >= 5) {
+      staleCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: AMBER_FILL } };
+      staleCell.font = { bold: true, color: { argb: AMBER_TEXT } };
+    }
   });
   detail.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: detailHeaders.length } };
   detail.views = [{ state: "frozen", ySplit: 1 }];
