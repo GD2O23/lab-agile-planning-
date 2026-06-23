@@ -6,6 +6,7 @@ import { isClosureReview, isOpen, isPending, statusKey } from "../../lib/classif
 import { avg } from "../../lib/aggregations";
 import { personName } from "../../lib/processRows";
 import { uniqueSorted } from "../../lib/uniqueSorted";
+import { PersonFilterPicker } from "../common/PersonFilterPicker";
 import type { IncidentRow } from "../../types";
 
 type TeamSubKind = "all" | "open" | "progress" | "pending" | "closure" | "aging14" | "stale14" | "stale30";
@@ -81,11 +82,13 @@ export function TeamTab() {
           <div className="mapping-ok" style={{ marginBottom: 10 }}>
             <b>People filter:</b> Select one or more people to review a team, leavers, or reassignment group.
             <div style={{ marginTop: 8 }}>
-              <select multiple className="filter-multiselect" value={teamSelection} onChange={(e) => setPeopleFilter("team", Array.from(e.target.selectedOptions).map((o) => o.value))}>
-                {peopleOptions.map((p) => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
+              <PersonFilterPicker
+                label="People"
+                options={peopleOptions}
+                selected={teamSelection}
+                onChange={(next) => setPeopleFilter("team", next)}
+                wide
+              />
             </div>
           </div>
           <div className="table-wrap" style={{ maxHeight: 440, borderTop: 0 }}>

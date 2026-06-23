@@ -149,6 +149,23 @@ tr:hover td { background: #f8fafc; }
 .filter-summary-muted { color: #64748b; font-weight: 600; }
 .filter-summary-value { color: #0f172a; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+.person-filter-picker { width: 100%; z-index: 300; }
+.person-filter-picker.open { z-index: 1200; }
+.person-filter-picker .filter-picker-btn { width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.person-filter-picker .filter-menu { top: 42px; left: 0; right: auto; width: min(720px, calc(100vw - 96px)); min-width: min(620px, calc(100vw - 96px)); max-width: min(720px, calc(100vw - 96px)); max-height: 380px; overflow-y: auto; }
+.person-filter-picker.person-filter-wide .filter-menu { left: 0; right: 0; width: 100%; min-width: 100%; max-width: none; max-height: 380px; }
+.person-filter-actions { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; }
+.person-filter-actions button { min-height: 26px; padding: 4px 8px; border-radius: 6px; background: #e2e8f0; color: #334155; font-size: 11px; }
+.person-selected-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.person-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 999px; background: #dbeafe; color: #1e40af; font-size: 11px; font-weight: 800; }
+.person-chip button { min-height: 0; padding: 0; background: transparent; color: inherit; text-decoration: underline; }
+.person-chip-empty { font-size: 12px; color: #64748b; margin-top: 6px; }
+@media (max-width: 700px) { .person-filter-picker .filter-menu { min-width: 100%; max-width: 100%; width: 100%; } }
+.management-people-cell .person-filter-picker { width: 100%; max-width: 100%; }
+.management-people-cell .person-filter-picker .filter-picker-btn { width: 100%; max-width: 100%; }
+.management-people-cell .person-filter-picker .filter-menu { width: min(760px, calc(100vw - 96px)); min-width: min(520px, calc(100vw - 96px)); max-width: min(760px, calc(100vw - 96px)); }
+.panel:has(.person-filter-picker) { overflow: visible; position: relative; z-index: 5; }
+
 .export-grid { display: grid; grid-template-columns: repeat(4, minmax(160px, 1fr)); gap: 10px; }
 .saved-view-grid { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(200px, 1fr) auto auto auto; gap: 10px; align-items: end; }
 .quality-grid { display: grid; grid-template-columns: repeat(5, minmax(130px, 1fr)); gap: 10px; }

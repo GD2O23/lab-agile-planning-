@@ -7,6 +7,7 @@ import { uniqueSorted } from "../../lib/uniqueSorted";
 import { isClosureReview, isOpen, isPending, statusKey } from "../../lib/classification";
 import { exportManagementPack } from "../../lib/exports";
 import { personName } from "../../lib/processRows";
+import { PersonFilterPicker } from "../common/PersonFilterPicker";
 import {
   agingItems,
   groupItems,
@@ -45,7 +46,10 @@ export function ManagementTab() {
   const setManagement = useDashboardStore((s) => s.setManagement);
   const tabDrill = useDashboardStore((s) => s.tabDrill);
   const setTabDrill = useDashboardStore((s) => s.setTabDrill);
+  const peopleFilters = useDashboardStore((s) => s.peopleFilters);
+  const setPeopleFilter = useDashboardStore((s) => s.setPeopleFilter);
   const globalFiltered = useFilteredRows();
+  const managementSelection = peopleFilters.management;
 
   const datasetRows = useMemo(() => {
     let rs = globalFiltered;
@@ -53,10 +57,12 @@ export function ManagementTab() {
     else if (management.dataset === "closure") rs = rs.filter(isClosureReview);
     else if (management.dataset !== "all") rs = rs.filter((r) => r.operationalGroup === management.dataset);
     if (management.company) rs = rs.filter((r) => r.company === management.company);
+    if (managementSelection.length) rs = rs.filter((r) => managementSelection.includes(personName(r)));
     return rs;
-  }, [globalFiltered, management]);
+  }, [globalFiltered, management, managementSelection]);
 
   const companyOptions = useMemo(() => uniqueSorted(allRows.map((r) => r.company)), [allRows]);
+  const peopleOptions = useMemo(() => uniqueSorted(globalFiltered.map(personName)), [globalFiltered]);
 
   const pivot = useMemo(() => {
     const rowKeys = uniqueSorted(datasetRows.map((r) => pivotValue(r, management.row)));
@@ -148,6 +154,14 @@ export function ManagementTab() {
               <select value={management.column} onChange={(e) => setManagement({ column: e.target.value as PivotField })}>
                 {PIVOT_FIELDS.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}
               </select>
+            </div>
+            <div className="management-people-cell">
+              <PersonFilterPicker
+                label="People"
+                options={peopleOptions}
+                selected={managementSelection}
+                onChange={(next) => setPeopleFilter("management", next)}
+              />
             </div>
           </div>
           <div className="metric-grid" style={{ marginTop: 12 }}>
