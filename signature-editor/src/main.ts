@@ -1,6 +1,6 @@
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorkerSource from 'pdfjs-dist/build/pdf.worker.mjs?raw';
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import './style.css';
 
 const workerBlobUrl = URL.createObjectURL(
@@ -8,13 +8,24 @@ const workerBlobUrl = URL.createObjectURL(
 );
 pdfjsLib.GlobalWorkerOptions.workerSrc = workerBlobUrl;
 
-interface Placement {
+interface BasePlacement {
   page: number; // 0-based
   xRatio: number; // left, as ratio of canvas width
   yRatio: number; // top, as ratio of canvas height
   wRatio: number; // width, as ratio of canvas width
   hRatio: number; // height, as ratio of canvas height
 }
+
+interface SignaturePlacement extends BasePlacement {
+  type: 'signature';
+}
+
+interface DatePlacement extends BasePlacement {
+  type: 'date';
+  text: string;
+}
+
+type Placement = SignaturePlacement | DatePlacement;
 
 let pdfBytes: ArrayBuffer | null = null;
 let pdfDoc: pdfjsLib.PDFDocumentProxy | null = null;
@@ -35,6 +46,7 @@ app.innerHTML = `
       <label class="file-btn">Open PDF<input id="pdf-input" type="file" accept="application/pdf" hidden /></label>
       <label class="file-btn">Load Signature (PNG)<input id="png-input" type="file" accept="image/png" hidden /></label>
       <button id="add-signature" disabled>Add Signature to Page</button>
+      <button id="add-date" disabled>Add Date to Page</button>
       <span class="spacer"></span>
       <button id="prev-page" disabled>&larr; Prev</button>
       <span id="page-indicator">No PDF loaded</span>
@@ -54,6 +66,7 @@ app.innerHTML = `
 const pdfInput = document.querySelector<HTMLInputElement>('#pdf-input')!;
 const pngInput = document.querySelector<HTMLInputElement>('#png-input')!;
 const addSignatureBtn = document.querySelector<HTMLButtonElement>('#add-signature')!;
+const addDateBtn = document.querySelector<HTMLButtonElement>('#add-date')!;
 const prevPageBtn = document.querySelector<HTMLButtonElement>('#prev-page')!;
 const nextPageBtn = document.querySelector<HTMLButtonElement>('#next-page')!;
 const pageIndicator = document.querySelector<HTMLSpanElement>('#page-indicator')!;
@@ -64,6 +77,7 @@ const overlay = document.querySelector<HTMLDivElement>('#overlay')!;
 pdfInput.addEventListener('change', onPdfSelected);
 pngInput.addEventListener('change', onPngSelected);
 addSignatureBtn.addEventListener('click', addSignaturePlacement);
+addDateBtn.addEventListener('click', addDatePlacement);
 prevPageBtn.addEventListener('click', () => goToPage(currentPage - 1));
 nextPageBtn.addEventListener('click', () => goToPage(currentPage + 1));
 exportBtn.addEventListener('click', exportSignedPdf);
@@ -78,6 +92,7 @@ async function onPdfSelected(e: Event) {
   prevPageBtn.disabled = false;
   nextPageBtn.disabled = false;
   exportBtn.disabled = false;
+  addDateBtn.disabled = false;
   addSignatureBtn.disabled = !signatureImgEl;
   await renderPage(currentPage);
 }
@@ -123,7 +138,8 @@ function addSignaturePlacement() {
   if (!signatureImgEl) return;
   const wRatio = 0.25;
   const hRatio = (wRatio * canvas.width) / signatureAspect / canvas.height;
-  const placement: Placement = {
+  const placement: SignaturePlacement = {
+    type: 'signature',
     page: currentPage,
     xRatio: 0.35,
     yRatio: 0.45,
@@ -134,16 +150,50 @@ function addSignaturePlacement() {
   redrawOverlay();
 }
 
+function todayString(): string {
+  const d = new Date();
+  return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+}
+
+function addDatePlacement() {
+  const placement: DatePlacement = {
+    type: 'date',
+    page: currentPage,
+    xRatio: 0.35,
+    yRatio: 0.55,
+    wRatio: 0.18,
+    hRatio: 0.035,
+    text: todayString(),
+  };
+  placements.push(placement);
+  redrawOverlay();
+}
+
 function redrawOverlay() {
   overlay.innerHTML = '';
-  if (!signatureImgEl) return;
   placements
     .filter((p) => p.page === currentPage)
     .forEach((placement) => {
       const el = document.createElement('div');
-      el.className = 'sig-placement';
-      el.style.backgroundImage = `url(${signatureImgEl!.src})`;
+      el.className = placement.type === 'signature' ? 'sig-placement' : 'date-placement';
       applyPlacementStyle(el, placement);
+
+      let textInput: HTMLInputElement | null = null;
+      if (placement.type === 'signature') {
+        if (!signatureImgEl) return;
+        el.style.backgroundImage = `url(${signatureImgEl.src})`;
+      } else {
+        textInput = document.createElement('input');
+        textInput.type = 'text';
+        textInput.className = 'date-input';
+        textInput.value = placement.text;
+        textInput.style.fontSize = `${placement.hRatio * overlay.clientHeight * 0.7}px`;
+        textInput.addEventListener('input', () => {
+          placement.text = textInput!.value;
+        });
+        textInput.addEventListener('mousedown', (ev) => ev.stopPropagation());
+        el.appendChild(textInput);
+      }
 
       const handle = document.createElement('div');
       handle.className = 'resize-handle';
@@ -161,7 +211,7 @@ function redrawOverlay() {
       el.appendChild(removeBtn);
 
       el.addEventListener('mousedown', (ev) => {
-        if (ev.target === handle) return;
+        if (ev.target === handle || ev.target === textInput) return;
         ev.preventDefault();
         const rect = overlay.getBoundingClientRect();
         dragState = {
@@ -194,6 +244,10 @@ function applyPlacementStyle(el: HTMLElement, placement: Placement) {
   el.style.top = `${placement.yRatio * overlay.clientHeight}px`;
   el.style.width = `${placement.wRatio * overlay.clientWidth}px`;
   el.style.height = `${placement.hRatio * overlay.clientHeight}px`;
+  if (placement.type === 'date') {
+    const input = el.querySelector<HTMLInputElement>('.date-input');
+    if (input) input.style.fontSize = `${placement.hRatio * overlay.clientHeight * 0.7}px`;
+  }
 }
 
 window.addEventListener('mousemove', (ev) => {
@@ -213,7 +267,13 @@ window.addEventListener('mousemove', (ev) => {
     const h = overlay.clientHeight;
     const dx = ev.clientX - resizeState.startX;
     const newW = Math.max(20, resizeState.startW + dx);
-    const newH = newW / signatureAspect;
+    let newH: number;
+    if (resizeState.placement.type === 'signature') {
+      newH = newW / signatureAspect;
+    } else {
+      const dy = ev.clientY - resizeState.startY;
+      newH = Math.max(12, resizeState.startH + dy);
+    }
     resizeState.placement.wRatio = Math.min(newW / w, 1 - resizeState.placement.xRatio);
     resizeState.placement.hRatio = Math.min(newH / h, 1 - resizeState.placement.yRatio);
     applyPlacementStyle(resizeState.el, resizeState.placement);
@@ -228,23 +288,36 @@ window.addEventListener('mouseup', () => {
 async function exportSignedPdf() {
   if (!pdfBytes) return;
   if (placements.length === 0) {
-    alert('Add at least one signature placement before exporting.');
+    alert('Add at least one signature or date placement before exporting.');
     return;
   }
-  if (!signaturePngBytes) return;
 
   const doc = await PDFDocument.load(pdfBytes);
-  const pngImage = await doc.embedPng(signaturePngBytes);
   const pages = doc.getPages();
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const pngImage = signaturePngBytes ? await doc.embedPng(signaturePngBytes) : null;
 
   for (const placement of placements) {
     const page = pages[placement.page];
     const { width, height } = page.getSize();
-    const sigWidth = placement.wRatio * width;
-    const sigHeight = placement.hRatio * height;
+    const boxWidth = placement.wRatio * width;
+    const boxHeight = placement.hRatio * height;
     const x = placement.xRatio * width;
-    const y = height - placement.yRatio * height - sigHeight; // flip y-axis
-    page.drawImage(pngImage, { x, y, width: sigWidth, height: sigHeight });
+    const y = height - placement.yRatio * height - boxHeight; // flip y-axis
+
+    if (placement.type === 'signature') {
+      if (!pngImage) continue;
+      page.drawImage(pngImage, { x, y, width: boxWidth, height: boxHeight });
+    } else {
+      const fontSize = boxHeight * 0.7;
+      page.drawText(placement.text, {
+        x,
+        y: y + boxHeight * 0.15,
+        size: fontSize,
+        font,
+        color: rgb(0, 0, 0),
+      });
+    }
   }
 
   const signedBytes = await doc.save();
