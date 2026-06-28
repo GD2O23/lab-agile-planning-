@@ -104,7 +104,7 @@ async function renderPage(pageNum: number) {
   overlay.style.width = `${viewport.width}px`;
   overlay.style.height = `${viewport.height}px`;
   const ctx = canvas.getContext('2d')!;
-  await page.render({ canvas, canvasContext: ctx, viewport }).promise;
+  await page.render({ canvasContext: ctx, viewport }).promise;
   pageIndicator.textContent = `Page ${pageNum + 1} / ${pdfDoc.numPages}`;
   redrawOverlay();
 }
