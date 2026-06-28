@@ -1,9 +1,12 @@
 import * as pdfjsLib from 'pdfjs-dist';
-import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url';
+import pdfWorkerSource from 'pdfjs-dist/build/pdf.worker.mjs?raw';
 import { PDFDocument } from 'pdf-lib';
 import './style.css';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+const workerBlobUrl = URL.createObjectURL(
+  new Blob([pdfWorkerSource], { type: 'application/javascript' }),
+);
+pdfjsLib.GlobalWorkerOptions.workerSrc = workerBlobUrl;
 
 interface Placement {
   page: number; // 0-based

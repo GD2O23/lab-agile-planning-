@@ -4,8 +4,13 @@ A fully client-side PDF signing tool: open a PDF, drop in a transparent-backgrou
 PNG signature, drag/resize it onto any page, and download the signed PDF.
 
 Everything runs in the browser — the PDF and signature image are never uploaded
-anywhere. After `npm run build`, the contents of `dist/` are a static site that
-can be opened or served completely offline.
+anywhere.
+
+## Just use it
+
+Download `pdf-signature-editor.html` from this folder and double-click it (or
+drag it into a browser tab). It is a single self-contained HTML file — no
+server, no install, works fully offline.
 
 ## Develop
 
@@ -14,9 +19,9 @@ npm install
 npm run dev
 ```
 
-## Build a standalone static bundle
+## Rebuild the standalone HTML file
 
 ```sh
 npm run build
-npm run preview   # serve dist/ locally to verify
+cp dist/index.html pdf-signature-editor.html
 ```
