@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Invoice Generator</title>
+<style>
+  :root {
+    --navy: #122c4a;
+    --teal: #1aab9b;
+    --light-blue: #eef4f8;
+    --light-teal: #e8f6f4;
+    --light-yellow: #fdf6dc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f0f2f5;
+    margin: 0;
+    padding: 24px;
+    color: #1c2733;
+  }
+  .toolbar {
+    max-width: 900px;
+    margin: 0 auto 16px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+  .toolbar button, .toolbar label.upload {
+    background: var(--teal);
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  .toolbar button.secondary {
+    background: var(--navy);
+  }
+  .invoice {
+    max-width: 900px;
+    margin: 0 auto;
+    background: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  }
+  .header {
+    background: var(--navy);
+    color: #fff;
+    padding: 28px 36px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .header .brand input {
+    font-size: 26px;
+    font-weight: bold;
+    color: #fff;
+    background: transparent;
+    border: none;
+    border-bottom: 1px dashed rgba(255,255,255,0.4);
+    width: 100%;
+    margin-bottom: 4px;
+  }
+  .header .brand input.tagline {
+    font-size: 13px;
+    font-weight: normal;
+  }
+  .header .invoice-title {
+    font-size: 34px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+  .accent-bar { height: 6px; background: var(--teal); }
+  .content { padding: 28px 36px; }
+  .two-col {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 20px;
+  }
+  .box {
+    flex: 1;
+    background: var(--light-blue);
+    padding: 16px 18px;
+    border-radius: 6px;
+  }
+  .box h3 {
+    margin: 0 0 10px;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    color: #46586b;
+    text-transform: uppercase;
+  }
+  .box input, textarea {
+    width: 100%;
+    border: none;
+    background: transparent;
+    border-bottom: 1px solid #d4dde5;
+    font-size: 14px;
+    padding: 4px 0;
+    margin-bottom: 4px;
+    font-family: inherit;
+    color: #1c2733;
+  }
+  .meta-row {
+    display: flex;
+    gap: 18px;
+    border: 1px solid #d4dde5;
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+  }
+  .meta-row .field { flex: 1; }
+  .meta-row label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #46586b;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .meta-row input {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #d4dde5;
+    font-weight: bold;
+    font-size: 14px;
+    padding: 3px 0;
+  }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+  thead tr { background: var(--navy); color: #fff; }
+  thead th {
+    text-align: left;
+    padding: 10px 8px;
+    font-size: 12px;
+    text-transform: uppercase;
+  }
+  thead th.num { text-align: right; }
+  tbody tr:nth-child(even) { background: #f7fafc; }
+  tbody td { padding: 8px; vertical-align: top; }
+  tbody td.num { text-align: right; }
+  tbody input { border: none; background: transparent; width: 100%; font-size: 14px; }
+  tbody input.num { text-align: right; }
+  tbody .line-total { font-weight: bold; }
+  .remove-row {
+    background: #e25c5c;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+  }
+  .add-row-btn {
+    background: none;
+    border: 1px dashed var(--teal);
+    color: var(--teal);
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    margin-bottom: 24px;
+  }
+  .totals {
+    width: 280px;
+    margin-left: auto;
+    margin-bottom: 24px;
+  }
+  .totals .row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: var(--light-blue);
+    font-size: 14px;
+  }
+  .totals .row.due {
+    background: var(--navy);
+    color: #fff;
+    font-weight: bold;
+    font-size: 16px;
+    border-radius: 0 0 6px 6px;
+  }
+  .totals input {
+    width: 90px;
+    text-align: right;
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    color: inherit;
+  }
+  .bottom-two-col { display: flex; gap: 24px; margin-bottom: 20px; }
+  .payment-box { background: var(--light-teal); }
+  .notes-box { background: var(--light-yellow); }
+  .footer-note {
+    border-top: 1px solid #e0e6ec;
+    padding-top: 14px;
+    font-size: 11px;
+    color: #555;
+  }
+  .footer-note textarea {
+    border: none;
+    background: transparent;
+    width: 100%;
+    font-size: 11px;
+    color: #555;
+    resize: vertical;
+    min-height: 40px;
+  }
+  .bottom-bar { height: 6px; background: var(--teal); }
+
+  @media print {
+    body { background: #fff; padding: 0; margin: 0; }
+    .toolbar { display: none; }
+    .invoice { box-shadow: none; max-width: 100%; }
+    .remove-row, .add-row-btn { display: none !important; }
+    input, textarea { border-bottom: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label class="upload">Save Draft (.json)
+    <input type="file" id="hiddenSaveTrigger" style="display:none">
+  </label>
+  <button id="saveBtn" class="secondary">Save Draft</button>
+  <button id="loadBtn" class="secondary">Load Draft</button>
+  <input type="file" id="loadInput" accept=".json" style="display:none">
+  <button id="printBtn">Export / Print PDF</button>
+</div>
+
+<div class="invoice" id="invoice">
+  <div class="header">
+    <div class="brand">
+      <input id="businessName" value="PlayForge 3D">
+      <input id="tagline" class="tagline" value="Local 3D printed fidgets, creatures and OSHC packs">
+    </div>
+    <div class="invoice-title">INVOICE</div>
+  </div>
+  <div class="accent-bar"></div>
+
+  <div class="content">
+    <div class="two-col">
+      <div class="box">
+        <h3>From</h3>
+        <input id="fromName" value="PlayForge 3D">
+        <input id="fromAbn" value="ABN: ">
+        <input id="fromAddress" value="Suburb, QLD">
+        <input id="fromEmail" value="email@example.com">
+        <input id="fromPhone" value="phone">
+      </div>
+      <div class="box">
+        <h3>Bill To</h3>
+        <input id="billName" placeholder="OSHC Centre Name">
+        <input id="billContact" placeholder="Coordinator / Accounts">
+        <input id="billAddress" placeholder="Centre address">
+        <input id="billEmail" placeholder="accounts@example.com">
+        <input id="billAbn" placeholder="ABN: (if invoice is $1,000+)">
+      </div>
+    </div>
+
+    <div class="meta-row">
+      <div class="field">
+        <label>Invoice No.</label>
+        <input id="invoiceNo" value="PF3D-0001">
+      </div>
+      <div class="field">
+        <label>Issue Date</label>
+        <input id="issueDate" type="date">
+      </div>
+      <div class="field">
+        <label>Due Date</label>
+        <input id="dueDate" type="date">
+      </div>
+      <div class="field">
+        <label>Payment Terms</label>
+        <input id="paymentTerms" value="7 days">
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th class="num" style="width:60px">Qty</th>
+          <th class="num" style="width:90px">Unit</th>
+          <th class="num" style="width:100px">Total</th>
+          <th style="width:30px"></th>
+        </tr>
+      </thead>
+      <tbody id="lineItems"></tbody>
+    </table>
+    <button class="add-row-btn" id="addRowBtn">+ Add line item</button>
+
+    <div class="totals">
+      <div class="row"><span>Subtotal</span><span id="subtotalDisplay">$0.00</span></div>
+      <div class="row"><span>GST</span><input id="gst" type="number" step="0.01" value="0" oninput="recalc()"></div>
+      <div class="row due"><span>Amount Due</span><span id="amountDue">$0.00</span></div>
+    </div>
+
+    <div class="bottom-two-col">
+      <div class="box payment-box">
+        <h3>Payment Details</h3>
+        <input id="bank" placeholder="Bank">
+        <input id="bsb" placeholder="BSB">
+        <input id="account" placeholder="Account number">
+        <input id="accountName" placeholder="Account name">
+        <input id="reference" placeholder="Reference" value="PF3D-0001">
+      </div>
+      <div class="box notes-box">
+        <h3>Notes</h3>
+        <textarea id="notes" rows="5">Thank you for supporting a local maker business.
+Colours and finish may vary due to the 3D printing process.</textarea>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      <textarea id="footerNote" rows="2">No GST has been charged. This document is an invoice, not a tax invoice.
+For products intended for children: not suitable for children under 3 years; adult supervision recommended.</textarea>
+    </div>
+  </div>
+  <div class="bottom-bar"></div>
+</div>
+
+<script>
+function fmt(n) {
+  return '$' + (Math.round(n * 100) / 100).toFixed(2);
+}
+
+function makeRow(desc, qty, unit) {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input class="desc" value="${desc || ''}" placeholder="Item description"></td>
+    <td class="num"><input class="qty num" type="number" step="1" value="${qty != null ? qty : 1}" oninput="recalc()"></td>
+    <td class="num"><input class="unit num" type="number" step="0.01" value="${unit != null ? unit : 0}" oninput="recalc()"></td>
+    <td class="num line-total">$0.00</td>
+    <td><button class="remove-row" onclick="this.closest('tr').remove(); recalc();">×</button></td>
+  `;
+  return tr;
+}
+
+function addRow(desc, qty, unit) {
+  document.getElementById('lineItems').appendChild(makeRow(desc, qty, unit));
+  recalc();
+}
+
+function recalc() {
+  let subtotal = 0;
+  document.querySelectorAll('#lineItems tr').forEach(tr => {
+    const qty = parseFloat(tr.querySelector('.qty').value) || 0;
+    const unit = parseFloat(tr.querySelector('.unit').value) || 0;
+    const total = qty * unit;
+    tr.querySelector('.line-total').textContent = fmt(total);
+    subtotal += total;
+  });
+  const gst = parseFloat(document.getElementById('gst').value) || 0;
+  document.getElementById('subtotalDisplay').textContent = fmt(subtotal);
+  document.getElementById('amountDue').textContent = fmt(subtotal + gst);
+}
+
+document.getElementById('addRowBtn').addEventListener('click', () => addRow('', 1, 0));
+document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+function todayISO(offsetDays) {
+  const d = new Date();
+  d.setDate(d.getDate() + (offsetDays || 0));
+  return d.toISOString().slice(0, 10);
+}
+document.getElementById('issueDate').value = todayISO(0);
+document.getElementById('dueDate').value = todayISO(7);
+
+addRow('Intro OSHC Pack - 30 mixed 3D printed fidgets and creatures', 1, 250.00);
+addRow('Local batch delivery', 1, 0.00);
+
+const FIELD_IDS = [
+  'businessName','tagline','fromName','fromAbn','fromAddress','fromEmail','fromPhone',
+  'billName','billContact','billAddress','billEmail','billAbn',
+  'invoiceNo','issueDate','dueDate','paymentTerms','gst',
+  'bank','bsb','account','accountName','reference','notes','footerNote'
+];
+
+function collectData() {
+  const data = {};
+  FIELD_IDS.forEach(id => { data[id] = document.getElementById(id).value; });
+  data.lineItems = [...document.querySelectorAll('#lineItems tr')].map(tr => ({
+    desc: tr.querySelector('.desc').value,
+    qty: tr.querySelector('.qty').value,
+    unit: tr.querySelector('.unit').value
+  }));
+  return data;
+}
+
+function applyData(data) {
+  FIELD_IDS.forEach(id => { if (data[id] !== undefined) document.getElementById(id).value = data[id]; });
+  document.getElementById('lineItems').innerHTML = '';
+  (data.lineItems || []).forEach(li => addRow(li.desc, li.qty, li.unit));
+  recalc();
+}
+
+document.getElementById('saveBtn').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(collectData(), null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const invNo = document.getElementById('invoiceNo').value || 'invoice';
+  a.href = url;
+  a.download = invNo + '-draft.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('loadBtn').addEventListener('click', () => {
+  document.getElementById('loadInput').click();
+});
+
+document.getElementById('loadInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      applyData(JSON.parse(reader.result));
+    } catch (err) {
+      alert('Could not read draft file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+});
+</script>
+</body>
+</html>
