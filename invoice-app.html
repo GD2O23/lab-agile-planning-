@@ -70,6 +70,24 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    position: relative;
+    border-radius: 10px;
+  }
+  .header .logo:hover { outline: 2px dashed rgba(255,255,255,0.5); }
+  .header .logo img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+  .header .logo .logo-hint {
+    position: absolute;
+    bottom: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    color: rgba(255,255,255,0.6);
+    white-space: nowrap;
   }
   .header .brand input {
     font-size: 26px;
@@ -259,6 +277,7 @@
     .toolbar { display: none; }
     .invoice { box-shadow: none; max-width: 100%; page-break-inside: avoid; break-inside: avoid; }
     .remove-row, .add-row-btn { display: none !important; }
+    .logo-hint, .logo:hover { display: none !important; outline: none !important; }
     input, textarea { border-bottom-color: transparent !important; }
     .header { padding: 20px 28px; }
     .content { padding: 18px 28px; }
@@ -288,8 +307,9 @@
 <div class="invoice" id="invoice">
   <div class="header">
     <div class="brand-row">
-      <div class="logo">
-        <svg viewBox="0 0 200 240" width="46" height="55" xmlns="http://www.w3.org/2000/svg">
+      <div class="logo" id="logoWrap" title="Click to upload your own logo">
+        <img id="logoImg" style="display:none" alt="Logo">
+        <svg id="logoSvg" viewBox="0 0 200 240" width="46" height="55" xmlns="http://www.w3.org/2000/svg">
           <path d="M60 85 A40 40 0 0 1 140 85" stroke="#f6c343" stroke-width="22" fill="none" stroke-linecap="round"/>
           <rect x="40" y="85" width="120" height="80" rx="32" fill="#14a394"/>
           <rect x="58" y="103" width="84" height="44" rx="22" fill="#e8f5f0"/>
@@ -299,6 +319,8 @@
           <g transform="translate(100,180)"><rect x="-7" y="0" width="14" height="40" fill="#ef6f60"/></g>
           <g transform="translate(152,178) rotate(30)"><rect x="-7" y="0" width="14" height="40" fill="#ef6f60"/></g>
         </svg>
+        <span class="logo-hint">click to upload</span>
+        <input type="file" id="logoUpload" accept="image/*" style="display:none">
       </div>
       <div class="brand">
         <input id="businessName" value="PlayForge 3D">
@@ -435,6 +457,23 @@ function recalc() {
 document.getElementById('addRowBtn').addEventListener('click', () => addRow('', 1, 0));
 document.getElementById('printBtn').addEventListener('click', () => window.print());
 
+let customLogoData = null;
+document.getElementById('logoWrap').addEventListener('click', () => {
+  document.getElementById('logoUpload').click();
+});
+document.getElementById('logoUpload').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    customLogoData = reader.result;
+    document.getElementById('logoImg').src = customLogoData;
+    document.getElementById('logoImg').style.display = 'block';
+    document.getElementById('logoSvg').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+});
+
 function todayISO(offsetDays) {
   const d = new Date();
   d.setDate(d.getDate() + (offsetDays || 0));
@@ -461,6 +500,7 @@ function collectData() {
     qty: tr.querySelector('.qty').value,
     unit: tr.querySelector('.unit').value
   }));
+  data.customLogoData = customLogoData;
   return data;
 }
 
@@ -468,6 +508,12 @@ function applyData(data) {
   FIELD_IDS.forEach(id => { if (data[id] !== undefined) document.getElementById(id).value = data[id]; });
   document.getElementById('lineItems').innerHTML = '';
   (data.lineItems || []).forEach(li => addRow(li.desc, li.qty, li.unit));
+  if (data.customLogoData) {
+    customLogoData = data.customLogoData;
+    document.getElementById('logoImg').src = customLogoData;
+    document.getElementById('logoImg').style.display = 'block';
+    document.getElementById('logoSvg').style.display = 'none';
+  }
   recalc();
 }
 
