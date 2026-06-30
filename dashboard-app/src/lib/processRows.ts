@@ -22,7 +22,7 @@ function buildTicketUrl(_ticketNumber: string, explicitUrl: unknown): string {
 
 /** Faithful port of processRows() row-mapping step (state.rawRows -> state.rows) */
 export function processRows(rawRows: RawRow[], mappings: FieldMappings): IncidentRow[] {
-  return rawRows.map((row) => {
+  const mapped = rawRows.map((row) => {
     const created = parseDate(rowValue(row, mappings, "createdDate"));
     const updated = parseDate(rowValue(row, mappings, "updatedDate"));
     const rawDesc = norm(rowValue(row, mappings, "description"));
@@ -59,6 +59,25 @@ export function processRows(rawRows: RawRow[], mappings: FieldMappings): Inciden
     };
     return result;
   });
+
+  // Deduplicate: one row per ticket (ticketNumber preferred, ticketId fallback),
+  // keeping the entry with the most recent updatedDate (latest export row = current state).
+  const seen = new Map<string, IncidentRow>();
+  for (const r of mapped) {
+    const key = r.ticketNumber || r.ticketId;
+    if (!key) continue;
+    const existing = seen.get(key);
+    if (!existing) {
+      seen.set(key, r);
+    } else {
+      const existingTs = existing.updatedDate?.getTime() ?? 0;
+      const currentTs = r.updatedDate?.getTime() ?? 0;
+      if (currentTs > existingTs) seen.set(key, r);
+    }
+  }
+  // Preserve any rows that had no key (no ticket ID at all) so they still appear.
+  const noKey = mapped.filter((r) => !r.ticketNumber && !r.ticketId);
+  return [...seen.values(), ...noKey];
 }
 
 export function personName(r: IncidentRow): string {
