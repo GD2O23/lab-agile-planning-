@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Invoice Generator</title>
+<style>
+  :root {
+    --navy: #122c4a;
+    --teal: #1aab9b;
+    --light-blue: #eef4f8;
+    --light-teal: #e8f6f4;
+    --light-yellow: #fdf6dc;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+  }
+  body {
+    font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+    background: #f0f2f5;
+    margin: 0;
+    padding: 24px;
+    color: #1c2733;
+  }
+  .toolbar {
+    max-width: 900px;
+    margin: 0 auto 16px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+  .toolbar button, .toolbar label.upload {
+    background: var(--teal);
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  .toolbar button.secondary {
+    background: var(--navy);
+  }
+  .invoice {
+    max-width: 900px;
+    margin: 0 auto;
+    background: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  }
+  .header {
+    background: var(--navy);
+    color: #fff;
+    padding: 32px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .header .brand-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+    cursor: pointer;
+    border-radius: 10px;
+    padding: 6px;
+    margin: -6px;
+  }
+  .header .brand-row:hover { outline: 2px dashed rgba(255,255,255,0.5); }
+  .header .brand-row .banner-hint {
+    position: absolute;
+    bottom: -16px;
+    left: 6px;
+    font-size: 9px;
+    color: rgba(255,255,255,0.6);
+    white-space: nowrap;
+  }
+  .header .brand-banner-img {
+    max-height: 70px;
+    max-width: 420px;
+    object-fit: contain;
+  }
+  .header .logo {
+    flex: 0 0 56px;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    border-radius: 10px;
+  }
+  .header .logo:hover { outline: 2px dashed rgba(255,255,255,0.5); }
+  .header .logo img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+  .header .logo .logo-hint {
+    position: absolute;
+    bottom: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    color: rgba(255,255,255,0.6);
+    white-space: nowrap;
+  }
+  .header .brand input {
+    font-size: 26px;
+    font-weight: bold;
+    color: #fff;
+    background: transparent;
+    border: none;
+    border-bottom: 1px dashed rgba(255,255,255,0.35);
+    width: 100%;
+    margin-bottom: 4px;
+  }
+  .header .brand input.tagline {
+    font-size: 13px;
+    font-weight: normal;
+    color: rgba(255,255,255,0.85);
+  }
+  .header .invoice-title {
+    font-size: 34px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    white-space: nowrap;
+    padding-top: 8px;
+  }
+  .accent-bar { height: 6px; background: var(--teal); }
+  .content { padding: 28px 36px; }
+  .two-col {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 20px;
+  }
+  .box {
+    flex: 1;
+    background: var(--light-blue);
+    padding: 16px 18px;
+    border-radius: 6px;
+  }
+  .box h3 {
+    margin: 0 0 10px;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    color: #46586b;
+    text-transform: uppercase;
+  }
+  .box input, textarea {
+    width: 100%;
+    border: none;
+    background: transparent;
+    border-bottom: 1px solid #d4dde5;
+    font-size: 14px;
+    padding: 4px 0;
+    margin-bottom: 4px;
+    font-family: inherit;
+    color: #1c2733;
+  }
+  .meta-row {
+    display: flex;
+    gap: 18px;
+    border: 1px solid #d4dde5;
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+  }
+  .meta-row .field { flex: 1; }
+  .meta-row label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #46586b;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .meta-row input {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #d4dde5;
+    font-weight: bold;
+    font-size: 14px;
+    padding: 3px 0;
+  }
+  .table-wrap {
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #e3e9ee;
+    margin-bottom: 8px;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: var(--navy); color: #fff; }
+  thead th {
+    text-align: left;
+    padding: 12px 10px;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  thead th.num { text-align: right; }
+  tbody tr:nth-child(even) { background: #f7fafc; }
+  tbody td { padding: 10px; vertical-align: top; }
+  tbody td.num { text-align: right; }
+  tbody input { border: none; background: transparent; width: 100%; font-size: 14px; }
+  tbody input.num { text-align: right; }
+  tbody .line-total { font-weight: bold; }
+  .currency-field {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    width: 100%;
+  }
+  .currency-field .prefix { color: #6b7c8d; margin-right: 2px; }
+  .currency-field input { text-align: right; }
+  .remove-row {
+    background: #e25c5c;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+  }
+  .add-row-btn {
+    background: none;
+    border: 1px dashed var(--teal);
+    color: var(--teal);
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    margin-bottom: 24px;
+  }
+  .totals {
+    width: 280px;
+    margin-left: auto;
+    margin-bottom: 24px;
+  }
+  .totals { border-radius: 6px; overflow: hidden; }
+  .totals .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 14px;
+    background: var(--light-blue);
+    font-size: 14px;
+  }
+  .totals .row.due {
+    background: var(--navy);
+    color: #fff;
+    font-weight: bold;
+    font-size: 16px;
+  }
+  .totals input {
+    width: 80px;
+    text-align: right;
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    color: inherit;
+  }
+  .bottom-two-col { display: flex; gap: 24px; margin-bottom: 20px; }
+  .payment-box { background: var(--light-teal); }
+  .notes-box { background: var(--light-yellow); }
+  .footer-note {
+    border-top: 1px solid #e0e6ec;
+    padding-top: 14px;
+    font-size: 11px;
+    color: #555;
+  }
+  .footer-note textarea {
+    border: none;
+    background: transparent;
+    width: 100%;
+    font-size: 11px;
+    color: #555;
+    resize: vertical;
+    min-height: 40px;
+  }
+  .bottom-bar { height: 6px; background: var(--teal); }
+
+  @page { size: A4; margin: 8mm; }
+  @media print {
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+    html, body { background: #fff; padding: 0; margin: 0; }
+    .toolbar { display: none; }
+    .invoice { box-shadow: none; max-width: 100%; page-break-inside: avoid; break-inside: avoid; }
+    .remove-row, .add-row-btn { display: none !important; }
+    .logo-hint, .logo:hover, .banner-hint, .brand-row:hover { display: none !important; outline: none !important; }
+    input, textarea { border-bottom-color: transparent !important; }
+    .header { padding: 20px 28px; }
+    .content { padding: 18px 28px; }
+    .box { padding: 12px 16px; }
+    .two-col, .bottom-two-col { margin-bottom: 14px; gap: 18px; }
+    .meta-row { padding: 10px 18px; margin-bottom: 14px; }
+    .totals { margin-bottom: 14px; }
+    .table-wrap { margin-bottom: 6px; }
+    thead th { padding: 8px 10px; }
+    tbody td { padding: 6px 10px; }
+    .footer-note { padding-top: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label class="upload">Save Draft (.json)
+    <input type="file" id="hiddenSaveTrigger" style="display:none">
+  </label>
+  <button id="saveBtn" class="secondary">Save Draft</button>
+  <button id="loadBtn" class="secondary">Load Draft</button>
+  <input type="file" id="loadInput" accept=".json" style="display:none">
+  <button id="printBtn">Export / Print PDF</button>
+</div>
+
+<div class="invoice" id="invoice">
+  <div class="header">
+    <div class="brand-row" id="brandRow" title="Click to upload a full logo + business name banner image">
+      <img id="brandBannerImg" class="brand-banner-img" style="display:none" alt="Brand banner">
+      <div id="brandRowContent" style="display:flex; align-items:center; gap:16px;">
+        <div class="logo" id="logoWrap" title="Click to upload just the icon">
+          <img id="logoImg" style="display:none" alt="Logo">
+          <svg id="logoSvg" viewBox="0 0 200 240" width="46" height="55" xmlns="http://www.w3.org/2000/svg">
+            <path d="M60 85 A40 40 0 0 1 140 85" stroke="#f6c343" stroke-width="22" fill="none" stroke-linecap="round"/>
+            <rect x="40" y="85" width="120" height="80" rx="32" fill="#14a394"/>
+            <rect x="58" y="103" width="84" height="44" rx="22" fill="#e8f5f0"/>
+            <circle cx="80" cy="125" r="9" fill="#15314f"/>
+            <circle cx="120" cy="125" r="9" fill="#15314f"/>
+            <g transform="translate(48,178) rotate(-30)"><rect x="-7" y="0" width="14" height="40" fill="#ef6f60"/></g>
+            <g transform="translate(100,180)"><rect x="-7" y="0" width="14" height="40" fill="#ef6f60"/></g>
+            <g transform="translate(152,178) rotate(30)"><rect x="-7" y="0" width="14" height="40" fill="#ef6f60"/></g>
+          </svg>
+          <input type="file" id="logoUpload" accept="image/*" style="display:none">
+        </div>
+        <div class="brand">
+          <input id="businessName" value="PlayForge 3D">
+          <input id="tagline" class="tagline" value="Local 3D printed fidgets, creatures and OSHC packs">
+        </div>
+      </div>
+      <span class="banner-hint">click to upload a full banner image (icon + name)</span>
+      <input type="file" id="bannerUpload" accept="image/*" style="display:none">
+    </div>
+    <div class="invoice-title">INVOICE</div>
+  </div>
+  <div class="accent-bar"></div>
+
+  <div class="content">
+    <div class="two-col">
+      <div class="box">
+        <h3>From</h3>
+        <input id="fromName" value="PlayForge 3D">
+        <input id="fromAbn" value="ABN: ">
+        <input id="fromAddress" value="Suburb, QLD">
+        <input id="fromEmail" value="email@example.com">
+        <input id="fromPhone" value="phone">
+      </div>
+      <div class="box">
+        <h3>Bill To</h3>
+        <input id="billName" placeholder="OSHC Centre Name">
+        <input id="billContact" placeholder="Coordinator / Accounts">
+        <input id="billAddress" placeholder="Centre address">
+        <input id="billEmail" placeholder="accounts@example.com">
+        <input id="billAbn" placeholder="ABN: (if invoice is $1,000+)">
+      </div>
+    </div>
+
+    <div class="meta-row">
+      <div class="field">
+        <label>Invoice No.</label>
+        <input id="invoiceNo" value="PF3D-0001">
+      </div>
+      <div class="field">
+        <label>Issue Date</label>
+        <input id="issueDate" type="date">
+      </div>
+      <div class="field">
+        <label>Due Date</label>
+        <input id="dueDate" type="date">
+      </div>
+      <div class="field">
+        <label>Payment Terms</label>
+        <input id="paymentTerms" value="7 days">
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th class="num" style="width:60px">Qty</th>
+            <th class="num" style="width:100px">Unit</th>
+            <th class="num" style="width:110px">Total</th>
+            <th style="width:30px"></th>
+          </tr>
+        </thead>
+        <tbody id="lineItems"></tbody>
+      </table>
+    </div>
+    <button class="add-row-btn" id="addRowBtn">+ Add line item</button>
+
+    <div class="totals">
+      <div class="row"><span>Subtotal</span><span id="subtotalDisplay">$0.00</span></div>
+      <div class="row"><span>GST</span>
+        <span class="currency-field"><span class="prefix">$</span><input id="gst" type="number" step="0.01" value="0" oninput="recalc()"></span>
+      </div>
+      <div class="row due"><span>Amount Due</span><span id="amountDue">$0.00</span></div>
+    </div>
+
+    <div class="bottom-two-col">
+      <div class="box payment-box">
+        <h3>Payment Details</h3>
+        <input id="bank" placeholder="Bank">
+        <input id="bsb" placeholder="BSB">
+        <input id="account" placeholder="Account number">
+        <input id="accountName" placeholder="Account name">
+        <input id="reference" placeholder="Reference" value="PF3D-0001">
+      </div>
+      <div class="box notes-box">
+        <h3>Notes</h3>
+        <textarea id="notes" rows="5">Thank you for supporting a local maker business.
+Colours and finish may vary due to the 3D printing process.</textarea>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      <textarea id="footerNote" rows="2">No GST has been charged. This document is an invoice, not a tax invoice.
+For products intended for children: not suitable for children under 3 years; adult supervision recommended.</textarea>
+    </div>
+  </div>
+  <div class="bottom-bar"></div>
+</div>
+
+<script>
+function fmt(n) {
+  return '$' + (Math.round(n * 100) / 100).toFixed(2);
+}
+
+function makeRow(desc, qty, unit) {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input class="desc" value="${desc || ''}" placeholder="Item description"></td>
+    <td class="num"><input class="qty num" type="number" step="1" value="${qty != null ? qty : 1}" oninput="recalc()"></td>
+    <td class="num"><span class="currency-field"><span class="prefix">$</span><input class="unit num" type="number" step="0.01" value="${unit != null ? unit : 0}" oninput="recalc()"></span></td>
+    <td class="num line-total">$0.00</td>
+    <td><button class="remove-row" onclick="this.closest('tr').remove(); recalc();">×</button></td>
+  `;
+  return tr;
+}
+
+function addRow(desc, qty, unit) {
+  document.getElementById('lineItems').appendChild(makeRow(desc, qty, unit));
+  recalc();
+}
+
+function recalc() {
+  let subtotal = 0;
+  document.querySelectorAll('#lineItems tr').forEach(tr => {
+    const qty = parseFloat(tr.querySelector('.qty').value) || 0;
+    const unit = parseFloat(tr.querySelector('.unit').value) || 0;
+    const total = qty * unit;
+    tr.querySelector('.line-total').textContent = fmt(total);
+    subtotal += total;
+  });
+  const gst = parseFloat(document.getElementById('gst').value) || 0;
+  document.getElementById('subtotalDisplay').textContent = fmt(subtotal);
+  document.getElementById('amountDue').textContent = fmt(subtotal + gst);
+}
+
+document.getElementById('addRowBtn').addEventListener('click', () => addRow('', 1, 0));
+document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+let customLogoData = null;
+let customBannerData = null;
+
+document.getElementById('logoWrap').addEventListener('click', (e) => {
+  e.stopPropagation();
+  document.getElementById('logoUpload').click();
+});
+document.getElementById('logoUpload').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    customLogoData = reader.result;
+    document.getElementById('logoImg').src = customLogoData;
+    document.getElementById('logoImg').style.display = 'block';
+    document.getElementById('logoSvg').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('brandRow').addEventListener('click', () => {
+  document.getElementById('bannerUpload').click();
+});
+document.getElementById('bannerUpload').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    customBannerData = reader.result;
+    document.getElementById('brandBannerImg').src = customBannerData;
+    document.getElementById('brandBannerImg').style.display = 'block';
+    document.getElementById('brandRowContent').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+});
+
+function todayISO(offsetDays) {
+  const d = new Date();
+  d.setDate(d.getDate() + (offsetDays || 0));
+  return d.toISOString().slice(0, 10);
+}
+document.getElementById('issueDate').value = todayISO(0);
+document.getElementById('dueDate').value = todayISO(7);
+
+addRow('Intro OSHC Pack - 30 mixed 3D printed fidgets and creatures', 1, 250.00);
+addRow('Local batch delivery', 1, 0.00);
+
+const FIELD_IDS = [
+  'businessName','tagline','fromName','fromAbn','fromAddress','fromEmail','fromPhone',
+  'billName','billContact','billAddress','billEmail','billAbn',
+  'invoiceNo','issueDate','dueDate','paymentTerms','gst',
+  'bank','bsb','account','accountName','reference','notes','footerNote'
+];
+
+function collectData() {
+  const data = {};
+  FIELD_IDS.forEach(id => { data[id] = document.getElementById(id).value; });
+  data.lineItems = [...document.querySelectorAll('#lineItems tr')].map(tr => ({
+    desc: tr.querySelector('.desc').value,
+    qty: tr.querySelector('.qty').value,
+    unit: tr.querySelector('.unit').value
+  }));
+  data.customLogoData = customLogoData;
+  data.customBannerData = customBannerData;
+  return data;
+}
+
+function applyData(data) {
+  FIELD_IDS.forEach(id => { if (data[id] !== undefined) document.getElementById(id).value = data[id]; });
+  document.getElementById('lineItems').innerHTML = '';
+  (data.lineItems || []).forEach(li => addRow(li.desc, li.qty, li.unit));
+  if (data.customLogoData) {
+    customLogoData = data.customLogoData;
+    document.getElementById('logoImg').src = customLogoData;
+    document.getElementById('logoImg').style.display = 'block';
+    document.getElementById('logoSvg').style.display = 'none';
+  }
+  if (data.customBannerData) {
+    customBannerData = data.customBannerData;
+    document.getElementById('brandBannerImg').src = customBannerData;
+    document.getElementById('brandBannerImg').style.display = 'block';
+    document.getElementById('brandRowContent').style.display = 'none';
+  }
+  recalc();
+}
+
+document.getElementById('saveBtn').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(collectData(), null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const invNo = document.getElementById('invoiceNo').value || 'invoice';
+  a.href = url;
+  a.download = invNo + '-draft.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('loadBtn').addEventListener('click', () => {
+  document.getElementById('loadInput').click();
+});
+
+document.getElementById('loadInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      applyData(JSON.parse(reader.result));
+    } catch (err) {
+      alert('Could not read draft file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+});
+</script>
+</body>
+</html>
