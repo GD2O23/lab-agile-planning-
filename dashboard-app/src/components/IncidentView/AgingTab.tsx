@@ -88,19 +88,19 @@ export function AgingTab() {
             />
           </div>
           <div className="metric-grid" style={{ gridTemplateColumns: "repeat(4, minmax(130px, 1fr))" }}>
-            <div className="metric soft-orange">
+            <div className="metric soft-orange" role="button" onClick={() => { setActivityThreshold("5"); setAgeThreshold("any"); }}>
               <div className="value">{openRows.filter((r) => r.daysSinceUpdated != null && r.daysSinceUpdated >= 5).length.toLocaleString()}</div>
               <div className="label">5+ days no activity</div>
             </div>
-            <div className="metric soft-red">
+            <div className="metric soft-red" role="button" onClick={() => { setActivityThreshold("14"); setAgeThreshold("any"); }}>
               <div className="value">{openRows.filter((r) => r.daysSinceUpdated != null && r.daysSinceUpdated >= 14).length.toLocaleString()}</div>
               <div className="label">14+ days no activity</div>
             </div>
-            <div className="metric soft-red">
+            <div className="metric soft-red" role="button" onClick={() => { setAgeThreshold("14"); setActivityThreshold("any"); }}>
               <div className="value">{openRows.filter((r) => r.daysOpen != null && r.daysOpen >= 14).length.toLocaleString()}</div>
               <div className="label">14+ days open</div>
             </div>
-            <div className="metric soft-red">
+            <div className="metric soft-red" role="button" onClick={() => { setAgeThreshold("30"); setActivityThreshold("any"); }}>
               <div className="value">{openRows.filter((r) => r.daysOpen != null && r.daysOpen >= 30).length.toLocaleString()}</div>
               <div className="label">30+ days open</div>
             </div>
