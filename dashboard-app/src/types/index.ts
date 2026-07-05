@@ -66,6 +66,7 @@ export interface Filters {
   category: string[];
   subCategory: string[];
   minDays: string;
+  openedWithin: string;
   search: string;
 }
 

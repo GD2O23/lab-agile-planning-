@@ -38,6 +38,9 @@ export function matchesBase(r: IncidentRow, filters: Filters, modes: FilterModes
   const md = Number(filters.minDays || "0");
   if (md && (r.daysOpen == null || r.daysOpen < md)) return false;
 
+  const ow = Number(filters.openedWithin || "0");
+  if (ow && (r.daysOpen == null || r.daysOpen > ow)) return false;
+
   if (filters.search) {
     const q = filters.search.toLowerCase();
     const hay = [
@@ -134,6 +137,7 @@ export const DEFAULT_FILTERS: Filters = {
   category: [],
   subCategory: [],
   minDays: "0",
+  openedWithin: "0",
   search: "",
 };
 

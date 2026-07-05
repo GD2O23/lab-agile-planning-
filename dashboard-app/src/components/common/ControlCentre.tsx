@@ -98,6 +98,7 @@ export function ControlCentre() {
   const activeCount =
     FILTER_DEFS.filter((d) => filters[d.key].length).length +
     (filters.minDays !== "0" && filters.minDays ? 1 : 0) +
+    (filters.openedWithin !== "0" && filters.openedWithin ? 1 : 0) +
     (filters.search ? 1 : 0) +
     (drills.length ? 1 : 0);
 
@@ -178,6 +179,17 @@ export function ControlCentre() {
                   <option value="14">14+</option>
                   <option value="30">30+</option>
                   <option value="60">60+</option>
+                </select>
+              </div>
+              <div>
+                <label>Opened within last</label>
+                <select value={filters.openedWithin} onChange={(e) => setFilters({ openedWithin: e.target.value })}>
+                  <option value="0">All time</option>
+                  <option value="1">1 day</option>
+                  <option value="4">4 days</option>
+                  <option value="7">7 days</option>
+                  <option value="14">14 days</option>
+                  <option value="30">30 days</option>
                 </select>
               </div>
               <div>
