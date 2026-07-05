@@ -105,7 +105,7 @@ export type Drill =
   | { kind: "pendingWorkbench"; reason: string; subKind: "all" | "stale14" | "stale30" | "closure" }
   | { kind: "team"; name: string; subKind: "all" | "open" | "progress" | "pending" | "closure" | "aging14" | "stale14" | "stale30" }
   | { kind: "teamException"; exceptionKind: "closure" | "aging14" | "stale14" }
-  | { kind: "category"; category: string; subCategory: string; subKind: "all" | "last24" | "24to48" | "48to3" | "older3" | "closure" }
+  | { kind: "category"; category: string; subCategory: string; subKind: "all" | "last24" | "24to48" | "48to3" | "older3" | "closure" | "stale14" }
   | { kind: "management"; rowField: PivotField; rowValue: string; colField?: PivotField | ""; colValue?: string }
   | { kind: "dataQuality"; issue: DataQualityIssue | "any" }
   | { kind: "none" };

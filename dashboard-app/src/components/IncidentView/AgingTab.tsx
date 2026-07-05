@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useIncidentRows } from "../../lib/selectors";
+import { useFilteredRows } from "../../lib/selectors";
 import { useDashboardStore } from "../../store/useDashboardStore";
 import { IncidentTable } from "../common/IncidentTable";
 import { PersonFilterPicker } from "../common/PersonFilterPicker";
@@ -25,11 +25,11 @@ const AGE_OPTIONS: { value: AgeThreshold; label: string }[] = [
 ];
 
 export function AgingTab() {
-  const rows = useIncidentRows();
+  const rows = useFilteredRows();
   const peopleFilters = useDashboardStore((s) => s.peopleFilters);
   const setPeopleFilter = useDashboardStore((s) => s.setPeopleFilter);
 
-  const [activityThreshold, setActivityThreshold] = useState<ActivityThreshold>("5");
+  const [activityThreshold, setActivityThreshold] = useState<ActivityThreshold>("any");
   const [ageThreshold, setAgeThreshold] = useState<AgeThreshold>("any");
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
 
