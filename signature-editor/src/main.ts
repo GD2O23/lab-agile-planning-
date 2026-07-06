@@ -232,7 +232,7 @@ function renderAcroFields() {
       el.style.width  = `${field.wRatio * overlay.clientWidth}px`;
       el.style.height = `${field.hRatio * overlay.clientHeight}px`;
 
-      const fontSize = `${field.hRatio * overlay.clientHeight * 0.65}px`;
+      const fontSize = `${Math.min(field.hRatio * overlay.clientHeight * 0.65, 13)}px`;
 
       if (field.fieldType === 'checkbox') {
         const cb = document.createElement('input');
@@ -431,7 +431,9 @@ async function exportSignedPdf() {
         if (!field.value) continue;
         try {
           if (field.fieldType === 'text') {
-            (form.getField(field.name) as PDFTextField).setText(field.value);
+            const tf = form.getField(field.name) as PDFTextField;
+            tf.setFontSize(10); // prevent auto-size from picking something too large
+            tf.setText(field.value);
           } else if (field.fieldType === 'checkbox') {
             const cb = form.getField(field.name) as PDFCheckBox;
             field.value === 'true' ? cb.check() : cb.uncheck();
