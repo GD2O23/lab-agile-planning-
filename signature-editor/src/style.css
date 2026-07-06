@@ -9,14 +9,12 @@ body {
 }
 
 .container {
-  max-width: 960px;
+  max-width: 980px;
   margin: 0 auto;
   padding: 24px;
 }
 
-h1 {
-  margin-bottom: 4px;
-}
+h1 { margin-bottom: 4px; }
 
 .note {
   color: #555;
@@ -24,32 +22,56 @@ h1 {
   margin-bottom: 16px;
 }
 
+/* ── Toolbar ─────────────────────────────────────────────────── */
+
 .toolbar {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
-.toolbar .spacer {
-  flex: 1;
+.toolbar .spacer { flex: 1; min-width: 8px; }
+
+.toolbar-sep {
+  width: 1px;
+  height: 24px;
+  background: #d1d5db;
+  margin: 0 4px;
 }
 
 button,
 .file-btn {
-  padding: 8px 14px;
+  padding: 7px 13px;
   border: 1px solid #ccc;
   border-radius: 6px;
   background: white;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
+  white-space: nowrap;
 }
 
 button:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
 }
+
+/* ── Form-fields banner ──────────────────────────────────────── */
+
+.form-banner {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.form-banner.hidden { display: none; }
+
+/* ── Viewer ──────────────────────────────────────────────────── */
 
 #viewer-wrap {
   display: flex;
@@ -66,15 +88,49 @@ button:disabled {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 }
 
-#pdf-canvas {
-  display: block;
-}
+#pdf-canvas { display: block; }
 
 #overlay {
   position: absolute;
   top: 0;
   left: 0;
 }
+
+/* ── AcroForm fields ─────────────────────────────────────────── */
+
+.acro-field {
+  position: absolute;
+  box-sizing: border-box;
+}
+
+.acro-text,
+.acro-select {
+  width: 100%;
+  height: 100%;
+  border: 1px solid #93c5fd;
+  border-radius: 3px;
+  background: rgba(219, 234, 254, 0.5);
+  font-family: inherit;
+  color: #111;
+  padding: 0 4px;
+  box-sizing: border-box;
+}
+
+.acro-text:focus,
+.acro-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background: rgba(219, 234, 254, 0.75);
+}
+
+.acro-checkbox {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+/* ── Draggable placements ────────────────────────────────────── */
 
 .sig-placement {
   position: absolute;
@@ -86,9 +142,9 @@ button:disabled {
   box-sizing: border-box;
 }
 
-.date-placement {
+/* Shared base for date + textbox placements */
+.text-placement {
   position: absolute;
-  border: 1px dashed #16a34a;
   cursor: move;
   box-sizing: border-box;
   display: flex;
@@ -96,21 +152,24 @@ button:disabled {
   padding: 4px;
 }
 
-.date-input {
+.placement-date    { border: 1px dashed #16a34a; }
+.placement-textbox { border: 1px dashed #9333ea; }
+
+.placement-text-input {
   width: 100%;
   height: 100%;
   border: none;
   background: transparent;
   font-family: inherit;
   color: #111;
-  padding: 0 4px;
+  padding: 0;
   box-sizing: border-box;
   cursor: text;
 }
 
-.date-input:focus {
-  outline: none;
-}
+.placement-text-input:focus { outline: none; }
+
+/* ── Handles ─────────────────────────────────────────────────── */
 
 .resize-handle {
   position: absolute;
