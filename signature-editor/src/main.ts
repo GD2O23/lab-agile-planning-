@@ -17,9 +17,10 @@ interface BasePlacement {
   wRatio: number;
   hRatio: number;
 }
-interface SignaturePlacement extends BasePlacement { type: 'signature' }
-interface TextPlacement     extends BasePlacement { type: 'date' | 'textbox'; text: string }
-type Placement = SignaturePlacement | TextPlacement;
+interface SignaturePlacement  extends BasePlacement { type: 'signature' }
+interface TextPlacement      extends BasePlacement { type: 'date' | 'textbox'; text: string }
+interface RedactPlacement    extends BasePlacement { type: 'redact' }
+type Placement = SignaturePlacement | TextPlacement | RedactPlacement;
 
 interface AcroField {
   name: string;
@@ -45,6 +46,8 @@ let placements: Placement[] = [];
 let acroFields: AcroField[] = [];
 let dragState: { el: HTMLElement; placement: Placement; offsetX: number; offsetY: number } | null = null;
 let resizeState: { el: HTMLElement; placement: Placement; startX: number; startY: number; startW: number; startH: number } | null = null;
+let redactMode = false;
+let redactDraw: { startX: number; startY: number; el: HTMLElement; placement: RedactPlacement } | null = null;
 
 // ── Shell ────────────────────────────────────────────────────────────────────
 
@@ -60,6 +63,7 @@ app.innerHTML = `
       <button id="add-signature" disabled>Add Signature</button>
       <button id="add-date"      disabled>Add Date</button>
       <button id="add-textbox"   disabled>Add Text Box</button>
+      <button id="toggle-redact" disabled>Redact</button>
       <span class="spacer"></span>
       <button id="prev-page" disabled>&larr; Prev</button>
       <span id="page-indicator">No PDF loaded</span>
@@ -79,9 +83,10 @@ app.innerHTML = `
 
 const pdfInput      = document.querySelector<HTMLInputElement>('#pdf-input')!;
 const pngInput      = document.querySelector<HTMLInputElement>('#png-input')!;
-const addSigBtn     = document.querySelector<HTMLButtonElement>('#add-signature')!;
-const addDateBtn    = document.querySelector<HTMLButtonElement>('#add-date')!;
-const addTextboxBtn = document.querySelector<HTMLButtonElement>('#add-textbox')!;
+const addSigBtn      = document.querySelector<HTMLButtonElement>('#add-signature')!;
+const addDateBtn     = document.querySelector<HTMLButtonElement>('#add-date')!;
+const addTextboxBtn  = document.querySelector<HTMLButtonElement>('#add-textbox')!;
+const toggleRedactBtn = document.querySelector<HTMLButtonElement>('#toggle-redact')!;
 const prevPageBtn   = document.querySelector<HTMLButtonElement>('#prev-page')!;
 const nextPageBtn   = document.querySelector<HTMLButtonElement>('#next-page')!;
 const pageIndicator = document.querySelector<HTMLSpanElement>('#page-indicator')!;
@@ -95,6 +100,7 @@ pngInput.addEventListener('change', onPngSelected);
 addSigBtn.addEventListener('click', addSignaturePlacement);
 addDateBtn.addEventListener('click', addDatePlacement);
 addTextboxBtn.addEventListener('click', addTextboxPlacement);
+toggleRedactBtn.addEventListener('click', toggleRedactMode);
 prevPageBtn.addEventListener('click', () => goToPage(currentPage - 1));
 nextPageBtn.addEventListener('click', () => goToPage(currentPage + 1));
 exportBtn.addEventListener('click', exportSignedPdf);
@@ -112,9 +118,10 @@ async function onPdfSelected(e: Event) {
   prevPageBtn.disabled   = false;
   nextPageBtn.disabled   = false;
   exportBtn.disabled     = false;
-  addDateBtn.disabled    = false;
-  addTextboxBtn.disabled = false;
-  addSigBtn.disabled     = !signatureImgEl;
+  addDateBtn.disabled     = false;
+  addTextboxBtn.disabled  = false;
+  toggleRedactBtn.disabled = false;
+  addSigBtn.disabled      = !signatureImgEl;
   updateFormBanner();
   await renderPage(currentPage);
 }
@@ -272,6 +279,23 @@ function renderPlacements() {
   placements
     .filter((p) => p.page === currentPage)
     .forEach((placement) => {
+      if (placement.type === 'redact') {
+        const el = document.createElement('div');
+        el.className = 'redact-placement';
+        applyPlacementStyle(el, placement);
+        const removeBtn = document.createElement('div');
+        removeBtn.className   = 'remove-handle';
+        removeBtn.textContent = '×';
+        removeBtn.addEventListener('mousedown', (ev) => ev.stopPropagation());
+        removeBtn.addEventListener('click', () => {
+          placements = placements.filter((p) => p !== placement);
+          redrawOverlay();
+        });
+        el.appendChild(removeBtn);
+        overlay.appendChild(el);
+        return;
+      }
+
       const isSig = placement.type === 'signature';
 
       const el = document.createElement('div');
@@ -353,6 +377,20 @@ function applyPlacementStyle(el: HTMLElement, placement: Placement) {
 // ── Drag & resize ────────────────────────────────────────────────────────────
 
 window.addEventListener('mousemove', (ev) => {
+  if (redactDraw) {
+    const rect   = overlay.getBoundingClientRect();
+    const curX   = ev.clientX - rect.left;
+    const curY   = ev.clientY - rect.top;
+    const x      = Math.min(curX, redactDraw.startX);
+    const y      = Math.min(curY, redactDraw.startY);
+    const w      = Math.abs(curX - redactDraw.startX);
+    const h      = Math.abs(curY - redactDraw.startY);
+    redactDraw.el.style.left   = `${x}px`;
+    redactDraw.el.style.top    = `${y}px`;
+    redactDraw.el.style.width  = `${w}px`;
+    redactDraw.el.style.height = `${h}px`;
+    return;
+  }
   if (dragState) {
     const rect = overlay.getBoundingClientRect();
     const w = overlay.clientWidth, h = overlay.clientHeight;
@@ -380,7 +418,58 @@ window.addEventListener('mousemove', (ev) => {
   }
 });
 
-window.addEventListener('mouseup', () => { dragState = null; resizeState = null; });
+window.addEventListener('mouseup', () => {
+  if (redactDraw) {
+    const p = redactDraw.placement;
+    const w = overlay.clientWidth, h = overlay.clientHeight;
+    p.xRatio = parseFloat(redactDraw.el.style.left)   / w;
+    p.yRatio = parseFloat(redactDraw.el.style.top)    / h;
+    p.wRatio = parseFloat(redactDraw.el.style.width)  / w;
+    p.hRatio = parseFloat(redactDraw.el.style.height) / h;
+    if (p.wRatio > 0.005 && p.hRatio > 0.005) placements.push(p);
+    redactDraw = null;
+    redrawOverlay();
+  }
+  dragState   = null;
+  resizeState = null;
+});
+
+// ── Redact mode ───────────────────────────────────────────────────────────────
+
+function toggleRedactMode() {
+  redactMode = !redactMode;
+  toggleRedactBtn.classList.toggle('active', redactMode);
+  overlay.style.cursor = redactMode ? 'crosshair' : '';
+}
+
+// Start drawing a redaction rectangle
+overlay.addEventListener('mousedown', (ev) => {
+  if (!redactMode) return;
+  if ((ev.target as HTMLElement).closest('.redact-placement')) return; // clicking existing one
+  ev.preventDefault();
+  const rect = overlay.getBoundingClientRect();
+  const startX = ev.clientX - rect.left;
+  const startY = ev.clientY - rect.top;
+
+  const placement: RedactPlacement = {
+    type: 'redact',
+    page: currentPage,
+    xRatio: startX / overlay.clientWidth,
+    yRatio: startY / overlay.clientHeight,
+    wRatio: 0,
+    hRatio: 0,
+  };
+
+  const el = document.createElement('div');
+  el.className = 'redact-placement redact-drawing';
+  el.style.left   = `${startX}px`;
+  el.style.top    = `${startY}px`;
+  el.style.width  = '0px';
+  el.style.height = '0px';
+  overlay.appendChild(el);
+
+  redactDraw = { startX, startY, el, placement };
+});
 
 // ── Placement factories ───────────────────────────────────────────────────────
 
@@ -414,7 +503,7 @@ function addTextboxPlacement() {
 async function exportSignedPdf() {
   if (!pdfBytes) return;
   if (placements.length === 0 && acroFields.every((f) => f.value === '')) {
-    alert('Nothing to export — add a signature, text, or fill in a form field first.');
+    alert('Nothing to export — add a signature, text, redaction, or fill in a form field first.');
     return;
   }
 
@@ -455,7 +544,9 @@ async function exportSignedPdf() {
     const x  = placement.xRatio * width;
     const y  = height - placement.yRatio * height - bh; // flip y
 
-    if (placement.type === 'signature') {
+    if (placement.type === 'redact') {
+      page.drawRectangle({ x, y, width: bw, height: bh, color: rgb(0, 0, 0), borderWidth: 0 });
+    } else if (placement.type === 'signature') {
       if (!pngImage) continue;
       page.drawImage(pngImage, { x, y, width: bw, height: bh });
     } else {
