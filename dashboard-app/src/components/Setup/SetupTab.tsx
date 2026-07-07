@@ -4,144 +4,166 @@ import { useDashboardStore } from "../../store/useDashboardStore";
 import { EXPECTED_FIELDS } from "../../lib/fields";
 import type { FieldKey, RawRow } from "../../types";
 
-// ── Direct XLSX/ZIP XML parsing for hyperlinks (same approach as legacy app) ──
+// ── XLSX hyperlink extraction — direct ZIP/XML parsing (same as legacy app) ──
 
-async function readZipEntry(
-  data: Uint8Array,
-  view: DataView,
-  localOffset: number,
-  method: number,
-  compressedSize: number,
-): Promise<string> {
-  const localNameLen = view.getUint16(localOffset + 26, true);
-  const localExtraLen = view.getUint16(localOffset + 28, true);
-  const dataStart = localOffset + 30 + localNameLen + localExtraLen;
-  const compressed = data.slice(dataStart, dataStart + compressedSize);
+async function decompressZipEntry(compressed: Uint8Array, method: number): Promise<string> {
   let bytes: Uint8Array;
   if (method === 0) {
     bytes = compressed;
   } else {
-    const stream = new Blob([compressed]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+    const stream = new Blob([compressed as BlobPart]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
     bytes = new Uint8Array(await new Response(stream).arrayBuffer());
   }
   return new TextDecoder("utf-8").decode(bytes);
 }
 
+/** Index all entries in an XLSX/ZIP file. Returns filename → {offset, method, size}. */
+function indexZip(data: Uint8Array, view: DataView): Map<string, { local: number; method: number; size: number }> {
+  const files = new Map<string, { local: number; method: number; size: number }>();
+  let eocd = -1;
+  for (let i = data.length - 22; i >= 0; i--) {
+    if (data[i] === 0x50 && data[i + 1] === 0x4b && data[i + 2] === 0x05 && data[i + 3] === 0x06) {
+      eocd = i;
+      break;
+    }
+  }
+  if (eocd < 0) return files;
+  const count = view.getUint16(eocd + 10, true);
+  let ptr = view.getUint32(eocd + 16, true);
+  for (let i = 0; i < count; i++) {
+    if (view.getUint32(ptr, true) !== 0x02014b50) break;
+    const method = view.getUint16(ptr + 10, true);
+    const size = view.getUint32(ptr + 20, true);
+    const fnLen = view.getUint16(ptr + 28, true);
+    const exLen = view.getUint16(ptr + 30, true);
+    const cmLen = view.getUint16(ptr + 32, true);
+    const local = view.getUint32(ptr + 42, true);
+    const name = new TextDecoder("utf-8").decode(data.slice(ptr + 46, ptr + 46 + fnLen));
+    if (!name.endsWith("/")) files.set(name, { local, method, size });
+    ptr += 46 + fnLen + exLen + cmLen;
+  }
+  return files;
+}
+
+async function readZipEntry(
+  data: Uint8Array,
+  view: DataView,
+  entry: { local: number; method: number; size: number },
+): Promise<string> {
+  const { local, method, size } = entry;
+  const nameLen = view.getUint16(local + 26, true);
+  const exLen = view.getUint16(local + 28, true);
+  const start = local + 30 + nameLen + exLen;
+  return decompressZipEntry(data.slice(start, start + size), method);
+}
+
 /**
- * Parse HYPERLINK() formula cells directly from the XLSX zip XML — same
- * technique as the legacy app. Returns a map of cell address → URL.
+ * Extract HYPERLINK() formula URLs from an XLSX sheet's raw XML.
+ * Uses getElementsByTagNameNS("*", ...) to handle OOXML default namespace.
+ * Returns Map of cell address (e.g. "B2") → URL string.
  */
-async function parseXlsxHyperlinks(
-  buf: ArrayBuffer,
-  sheetIndex: number,
-): Promise<Map<string, string>> {
+async function parseXlsxHyperlinks(buf: ArrayBuffer, sheetIndex: number): Promise<Map<string, string>> {
   const urls = new Map<string, string>();
   try {
     const data = new Uint8Array(buf);
     const view = new DataView(buf);
+    const files = indexZip(data, view);
+    if (!files.size) return urls;
 
-    // Locate End of Central Directory record
-    let eocd = -1;
-    for (let i = data.length - 22; i >= 0; i--) {
-      if (data[i] === 0x50 && data[i + 1] === 0x4b && data[i + 2] === 0x05 && data[i + 3] === 0x06) {
-        eocd = i;
-        break;
-      }
-    }
-    if (eocd < 0) return urls;
-
-    const entries = view.getUint16(eocd + 10, true);
-    const centralOffset = view.getUint32(eocd + 16, true);
-
-    // Index every file in the zip
-    const files = new Map<string, { localOffset: number; method: number; compressedSize: number }>();
-    let ptr = centralOffset;
-    for (let i = 0; i < entries; i++) {
-      if (view.getUint32(ptr, true) !== 0x02014b50) break;
-      const method = view.getUint16(ptr + 10, true);
-      const compressedSize = view.getUint32(ptr + 20, true);
-      const fileNameLength = view.getUint16(ptr + 28, true);
-      const extraLength = view.getUint16(ptr + 30, true);
-      const commentLength = view.getUint16(ptr + 32, true);
-      const localOffset = view.getUint32(ptr + 42, true);
-      const name = new TextDecoder("utf-8").decode(data.slice(ptr + 46, ptr + 46 + fileNameLength));
-      if (!name.endsWith("/")) files.set(name, { localOffset, method, compressedSize });
-      ptr += 46 + fileNameLength + extraLength + commentLength;
-    }
-
-    const readFile = (name: string) => {
+    const readFile = async (name: string): Promise<string> => {
       const e = files.get(name);
-      if (!e) return Promise.resolve("");
-      return readZipEntry(data, view, e.localOffset, e.method, e.compressedSize);
+      return e ? readZipEntry(data, view, e) : "";
     };
 
-    // Resolve workbook → sheet path via rels
-    const [wbXml, wbRelsXml] = await Promise.all([
-      readFile("xl/workbook.xml"),
-      readFile("xl/_rels/workbook.xml.rels"),
-    ]);
-    if (!wbXml) return urls;
-
-    const rels: Record<string, string> = {};
-    new DOMParser().parseFromString(wbRelsXml, "application/xml")
-      .querySelectorAll("Relationship")
-      .forEach((r) => { rels[r.getAttribute("Id") || ""] = r.getAttribute("Target") || ""; });
-
-    const sheets = [...new DOMParser().parseFromString(wbXml, "application/xml").querySelectorAll("sheet")];
-    const target = sheets[sheetIndex];
-    if (!target) return urls;
-
-    const rid = target.getAttribute("r:id") || target.getAttribute("id") || "";
-    const relPath = rels[rid] || "";
-    // Resolve relative path: "worksheets/sheet1.xml" → "xl/worksheets/sheet1.xml"
-    const sheetPath = relPath.startsWith("/")
-      ? relPath.slice(1)
-      : "xl/" + relPath.replace(/^\.\.\//, "");
+    // Locate the sheet XML — try direct path first (works for 99% of xlsx files),
+    // then fall back to resolving via workbook.xml.rels.
+    let sheetPath = `xl/worksheets/sheet${sheetIndex + 1}.xml`;
+    if (!files.has(sheetPath)) {
+      // Resolve via workbook.xml → _rels
+      const [wbXml, relsXml] = await Promise.all([
+        readFile("xl/workbook.xml"),
+        readFile("xl/_rels/workbook.xml.rels"),
+      ]);
+      const rels: Record<string, string> = {};
+      const relsDoc = new DOMParser().parseFromString(relsXml, "application/xml");
+      const relElems = relsDoc.getElementsByTagNameNS("*", "Relationship");
+      for (let i = 0; i < relElems.length; i++) {
+        const r = relElems[i];
+        rels[r.getAttribute("Id") || ""] = r.getAttribute("Target") || "";
+      }
+      const wbDoc = new DOMParser().parseFromString(wbXml, "application/xml");
+      const sheetElems = wbDoc.getElementsByTagNameNS("*", "sheet");
+      const target = sheetElems[sheetIndex];
+      if (!target) return urls;
+      const rid = target.getAttribute("r:id") || target.getAttribute("id") || "";
+      const relPath = rels[rid] || "";
+      sheetPath = relPath.startsWith("/")
+        ? relPath.slice(1)
+        : "xl/" + relPath.replace(/^\.\.\//, "");
+    }
 
     const sheetXml = await readFile(sheetPath);
     if (!sheetXml) return urls;
 
-    // Extract HYPERLINK() formula URLs — identical regex to legacy app
-    new DOMParser().parseFromString(sheetXml, "application/xml")
-      .querySelectorAll("sheetData row c")
-      .forEach((c) => {
-        const ref = c.getAttribute("r") || "";
-        const f = c.querySelector("f");
-        if (f && /^HYPERLINK\(/i.test(f.textContent || "")) {
-          const mm = (f.textContent || "").match(/HYPERLINK\("([^"]+)"/i);
-          if (mm?.[1]) urls.set(ref, mm[1]);
-        }
-      });
-  } catch (e) {
-    console.warn("XLSX hyperlink extraction failed:", e);
+    // Parse XML and scan for HYPERLINK() formula cells.
+    // getElementsByTagNameNS with "*" wildcard handles the OOXML default namespace.
+    const doc = new DOMParser().parseFromString(sheetXml, "application/xml");
+    const fElems = doc.getElementsByTagNameNS("*", "f");
+    for (let i = 0; i < fElems.length; i++) {
+      const text = fElems[i].textContent || "";
+      if (/^HYPERLINK\(/i.test(text)) {
+        const mm = text.match(/HYPERLINK\("([^"]+)"/i);
+        const cell = fElems[i].parentElement;
+        const ref = cell?.getAttribute("r") || "";
+        if (mm?.[1] && ref) urls.set(ref, mm[1]);
+      }
+    }
+  } catch (err) {
+    console.warn("Hyperlink extraction failed:", err);
   }
   return urls;
 }
 
 /**
- * Attach __link__<Header> keys to each row using the hyperlink map
- * built from raw XML (cell address → URL).
+ * Attach __link__<Header> keys to RawRow objects using the hyperlink URL map.
+ * Also handles native hyperlinks stored via SheetJS cell.l.Target.
  */
-function attachHyperlinks(sheet: XLSX.WorkSheet, rows: RawRow[], hyperlinkMap: Map<string, string>): void {
-  if (!hyperlinkMap.size || !rows.length) return;
+function attachHyperlinks(sheet: XLSX.WorkSheet, rows: RawRow[], urlMap: Map<string, string>): void {
+  if (!rows.length) return;
   const ref = sheet["!ref"];
   if (!ref) return;
   const range = XLSX.utils.decode_range(ref);
 
-  // Build column-index → header name map from row 0
+  // Build col-index → header name from the parsed sheet (handles shared strings)
   const colToHeader: Record<number, string> = {};
   for (let c = range.s.c; c <= range.e.c; c++) {
-    const cell = sheet[XLSX.utils.encode_cell({ r: 0, c })];
+    const cell = sheet[XLSX.utils.encode_cell({ r: range.s.r, c })];
     if (cell?.v != null) colToHeader[c] = String(cell.v);
   }
 
-  for (const [cellRef, url] of hyperlinkMap) {
+  // Apply formula-based hyperlinks from the URL map
+  for (const [cellRef, url] of urlMap) {
     const addr = XLSX.utils.decode_cell(cellRef);
     const header = colToHeader[addr.c];
     if (!header) continue;
-    const rowObj = rows[addr.r - range.s.r - 1]; // -1 for header row
+    const rowIdx = addr.r - range.s.r - 1;
+    const rowObj = rows[rowIdx];
     if (!rowObj) continue;
     rowObj[`__link__${header}`] = url;
+  }
+
+  // Also apply native SheetJS hyperlinks (cell.l.Target) as a second pass
+  for (let r = range.s.r + 1; r <= range.e.r; r++) {
+    const rowObj = rows[r - range.s.r - 1];
+    if (!rowObj) continue;
+    for (let c = range.s.c; c <= range.e.c; c++) {
+      const header = colToHeader[c];
+      if (!header) continue;
+      const cell = sheet[XLSX.utils.encode_cell({ r, c })];
+      if (cell?.l?.Target && !rowObj[`__link__${header}`]) {
+        rowObj[`__link__${header}`] = cell.l.Target;
+      }
+    }
   }
 }
 
@@ -166,18 +188,31 @@ export function SetupTab() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      setStatus(`Reading ${file.name} locally...`);
+      setStatus(`Reading ${file.name}...`);
       const buf = await file.arrayBuffer();
       rawBufRef.current = buf;
-      const wb = XLSX.read(buf, { type: "array", cellDates: true });
+
+      // Parse data with SheetJS (pass Uint8Array to avoid ArrayBuffer ambiguity)
+      const wb = XLSX.read(new Uint8Array(buf), { type: "array", cellDates: true });
       workbookRef.current = wb;
       const firstSheet = wb.SheetNames[0];
       const sheet = wb.Sheets[firstSheet];
       const rows = XLSX.utils.sheet_to_json<RawRow>(sheet, { defval: "", raw: true });
-      const hyperlinkMap = await parseXlsxHyperlinks(buf, 0);
-      attachHyperlinks(sheet, rows, hyperlinkMap);
+
+      // Extract hyperlinks directly from XLSX XML (same approach as legacy app)
+      const urlMap = await parseXlsxHyperlinks(buf, 0);
+      attachHyperlinks(sheet, rows, urlMap);
+
       const hdrs = rows.length ? Object.keys(rows[0]).filter((k) => !k.startsWith("__link__")) : [];
-      loadWorkbook(wb.SheetNames, hdrs, rows, firstSheet);
+      loadWorkbook(
+        wb.SheetNames,
+        hdrs,
+        rows,
+        firstSheet,
+      );
+      setStatus(
+        `Loaded ${rows.length.toLocaleString()} rows${urlMap.size ? ` · ${urlMap.size} hyperlinks found` : " · no hyperlinks found"} from "${firstSheet}".`,
+      );
     } catch (err) {
       setStatus(`Could not read workbook: ${(err as Error).message || err}`, true);
     }
@@ -190,8 +225,8 @@ export function SetupTab() {
     const sheetIndex = wb.SheetNames.indexOf(name);
     const sheet = wb.Sheets[name];
     const rows = XLSX.utils.sheet_to_json<RawRow>(sheet, { defval: "", raw: true });
-    const hyperlinkMap = await parseXlsxHyperlinks(buf, sheetIndex);
-    attachHyperlinks(sheet, rows, hyperlinkMap);
+    const urlMap = await parseXlsxHyperlinks(buf, Math.max(0, sheetIndex));
+    attachHyperlinks(sheet, rows, urlMap);
     const hdrs = rows.length ? Object.keys(rows[0]).filter((k) => !k.startsWith("__link__")) : [];
     setSheet(name, hdrs, rows);
   }
