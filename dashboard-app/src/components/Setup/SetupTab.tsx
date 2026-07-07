@@ -4,6 +4,33 @@ import { useDashboardStore } from "../../store/useDashboardStore";
 import { EXPECTED_FIELDS } from "../../lib/fields";
 import type { FieldKey, RawRow } from "../../types";
 
+/** Extract hyperlinks from SheetJS worksheet cells and attach as __link__<Header> on each row. */
+function attachHyperlinks(sheet: XLSX.WorkSheet, rows: RawRow[]): void {
+  const ref = sheet["!ref"];
+  if (!ref || !rows.length) return;
+  const range = XLSX.utils.decode_range(ref);
+  // Build column index → header name map from row 1
+  const colToHeader: Record<number, string> = {};
+  for (let c = range.s.c; c <= range.e.c; c++) {
+    const addr = XLSX.utils.encode_cell({ r: 0, c });
+    const cell = sheet[addr];
+    if (cell?.v != null) colToHeader[c] = String(cell.v);
+  }
+  // Walk data rows and copy any hyperlink targets onto the row object
+  for (let r = range.s.r + 1; r <= range.e.r; r++) {
+    const rowObj = rows[r - range.s.r - 1];
+    if (!rowObj) continue;
+    for (let c = range.s.c; c <= range.e.c; c++) {
+      const header = colToHeader[c];
+      if (!header) continue;
+      const addr = XLSX.utils.encode_cell({ r, c });
+      const cell = sheet[addr];
+      const target = cell?.l?.Target;
+      if (target) rowObj[`__link__${header}`] = target;
+    }
+  }
+}
+
 export function SetupTab() {
   const fileRef = useRef<HTMLInputElement>(null);
   const sheetName = useDashboardStore((s) => s.sheetName);
@@ -31,7 +58,8 @@ export function SetupTab() {
       const firstSheet = wb.SheetNames[0];
       const sheet = wb.Sheets[firstSheet];
       const rows = XLSX.utils.sheet_to_json<RawRow>(sheet, { defval: "", raw: true });
-      const hdrs = rows.length ? Object.keys(rows[0]) : [];
+      attachHyperlinks(sheet, rows);
+      const hdrs = rows.length ? Object.keys(rows[0]).filter((k) => !k.startsWith("__link__")) : [];
       loadWorkbook(wb.SheetNames, hdrs, rows, firstSheet);
     } catch (err) {
       setStatus(`Could not read workbook: ${(err as Error).message || err}`, true);
@@ -43,7 +71,8 @@ export function SetupTab() {
     if (!wb) return;
     const sheet = wb.Sheets[name];
     const rows = XLSX.utils.sheet_to_json<RawRow>(sheet, { defval: "", raw: true });
-    const hdrs = rows.length ? Object.keys(rows[0]) : [];
+    attachHyperlinks(sheet, rows);
+    const hdrs = rows.length ? Object.keys(rows[0]).filter((k) => !k.startsWith("__link__")) : [];
     setSheet(name, hdrs, rows);
   }
 
