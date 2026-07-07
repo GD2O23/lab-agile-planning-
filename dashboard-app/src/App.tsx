@@ -28,10 +28,41 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "setup", label: "Setup" },
 ];
 
+function attachHyperlinks(sheet: XLSX.WorkSheet, rows: RawRow[]): void {
+  if (!rows.length) return;
+  const ref = sheet["!ref"];
+  if (!ref) return;
+  const range = XLSX.utils.decode_range(ref);
+  const colToHeader: Record<number, string> = {};
+  for (let c = range.s.c; c <= range.e.c; c++) {
+    const cell = sheet[XLSX.utils.encode_cell({ r: range.s.r, c })];
+    if (cell?.v != null) colToHeader[c] = String(cell.v);
+  }
+  for (let r = range.s.r + 1; r <= range.e.r; r++) {
+    const rowObj = rows[r - range.s.r - 1];
+    if (!rowObj) continue;
+    for (let c = range.s.c; c <= range.e.c; c++) {
+      const header = colToHeader[c];
+      if (!header) continue;
+      const cell = sheet[XLSX.utils.encode_cell({ r, c })];
+      if (!cell) continue;
+      if (cell.l?.Target) {
+        rowObj[`__link__${header}`] = cell.l.Target;
+      } else if (cell.f) {
+        const mm = String(cell.f).match(/^HYPERLINK\("([^"]+)"/i);
+        if (mm?.[1]) rowObj[`__link__${header}`] = mm[1];
+      }
+    }
+  }
+}
+
 function sheetToRows(wb: XLSX.WorkBook, sheetName: string): { headers: string[]; rows: RawRow[] } {
   const ws = wb.Sheets[sheetName];
   const json = XLSX.utils.sheet_to_json<RawRow>(ws, { defval: "", raw: true });
-  const headers = json.length ? Object.keys(json[0]) : (XLSX.utils.sheet_to_json(ws, { header: 1 })[0] as string[]) || [];
+  attachHyperlinks(ws, json);
+  const headers = json.length
+    ? Object.keys(json[0]).filter((k) => !k.startsWith("__link__"))
+    : (XLSX.utils.sheet_to_json(ws, { header: 1 })[0] as string[]) || [];
   return { headers, rows: json };
 }
 
@@ -55,7 +86,7 @@ function App() {
     reader.onload = (ev) => {
       try {
         const data = ev.target?.result;
-        const wb = XLSX.read(data, { type: "array", cellDates: true });
+        const wb = XLSX.read(data, { type: "array", cellDates: true, cellFormula: true });
         const firstSheet = wb.SheetNames[0];
         const { headers, rows: rawRows } = sheetToRows(wb, firstSheet);
         loadWorkbook(wb.SheetNames, headers, rawRows, firstSheet);
