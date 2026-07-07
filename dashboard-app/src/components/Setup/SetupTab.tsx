@@ -4,19 +4,40 @@ import { useDashboardStore } from "../../store/useDashboardStore";
 import { EXPECTED_FIELDS } from "../../lib/fields";
 import type { FieldKey, RawRow } from "../../types";
 
-/** Extract hyperlinks from SheetJS worksheet cells and attach as __link__<Header> on each row. */
+/** Parse =HYPERLINK("url","text") formula — returns {url, text} or null. */
+function parseHyperlinkFormula(v: unknown): { url: string; text: string } | null {
+  if (typeof v !== "string") return null;
+  const s = v.trim();
+  if (!/^=\s*HYPERLINK\s*\(/i.test(s)) return null;
+  // Extract the two quoted arguments
+  const inner = s.replace(/^=\s*HYPERLINK\s*\(/i, "").replace(/\)\s*$/, "");
+  // Split on the comma between the two quoted strings, respecting quotes
+  const match = inner.match(/^"((?:[^"\\]|\\.)*)"\s*,\s*"((?:[^"\\]|\\.)*)"$/);
+  if (!match) {
+    // Try single-arg form: =HYPERLINK("url")
+    const single = inner.match(/^"((?:[^"\\]|\\.)*)"$/);
+    if (single) return { url: single[1], text: single[1] };
+    return null;
+  }
+  return { url: match[1], text: match[2] };
+}
+
+/**
+ * Scan every cell in the worksheet for:
+ *   1. =HYPERLINK("url","text") formulas — extract URL as __link__<Header>,
+ *      replace cell value with the display text so the column shows the right ID.
+ *   2. cell.l.Target (native hyperlinks) — same treatment.
+ */
 function attachHyperlinks(sheet: XLSX.WorkSheet, rows: RawRow[]): void {
   const ref = sheet["!ref"];
   if (!ref || !rows.length) return;
   const range = XLSX.utils.decode_range(ref);
-  // Build column index → header name map from row 1
   const colToHeader: Record<number, string> = {};
   for (let c = range.s.c; c <= range.e.c; c++) {
     const addr = XLSX.utils.encode_cell({ r: 0, c });
     const cell = sheet[addr];
     if (cell?.v != null) colToHeader[c] = String(cell.v);
   }
-  // Walk data rows and copy any hyperlink targets onto the row object
   for (let r = range.s.r + 1; r <= range.e.r; r++) {
     const rowObj = rows[r - range.s.r - 1];
     if (!rowObj) continue;
@@ -25,8 +46,20 @@ function attachHyperlinks(sheet: XLSX.WorkSheet, rows: RawRow[]): void {
       if (!header) continue;
       const addr = XLSX.utils.encode_cell({ r, c });
       const cell = sheet[addr];
-      const target = cell?.l?.Target;
-      if (target) rowObj[`__link__${header}`] = target;
+      if (!cell) continue;
+      // Native hyperlink (cell.l.Target)
+      if (cell.l?.Target) {
+        rowObj[`__link__${header}`] = cell.l.Target;
+        continue;
+      }
+      // Formula-based hyperlink: =HYPERLINK("url","display")
+      const formula = cell.f ? `=${cell.f}` : typeof cell.v === "string" ? cell.v : null;
+      const parsed = parseHyperlinkFormula(formula);
+      if (parsed) {
+        rowObj[`__link__${header}`] = parsed.url;
+        // Replace the formula string with the clean display text so the ID column shows correctly
+        rowObj[header] = parsed.text;
+      }
     }
   }
 }
@@ -53,7 +86,7 @@ export function SetupTab() {
     try {
       setStatus(`Reading ${file.name} locally with SheetJS...`);
       const buf = await file.arrayBuffer();
-      const wb = XLSX.read(buf, { type: "array", cellDates: true });
+      const wb = XLSX.read(buf, { type: "array", cellDates: true, cellFormula: true });
       workbookRef.current = wb;
       const firstSheet = wb.SheetNames[0];
       const sheet = wb.Sheets[firstSheet];
