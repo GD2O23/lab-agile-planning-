@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import * as XLSX from "xlsx";
 import { useDashboardStore } from "../../store/useDashboardStore";
 import { EXPECTED_FIELDS } from "../../lib/fields";
@@ -71,9 +71,7 @@ export function SetupTab() {
   const autoMap = useDashboardStore((s) => s.autoMap);
   const setStatus = useDashboardStore((s) => s.setStatus);
 
-  // Track link count separately so we can show it even after loadWorkbook
-  // overwrites the status message
-  const linkCountRef = useRef<number | null>(null);
+  const [linkDiag, setLinkDiag] = useState<string | null>(null);
 
   const workbookRef = useRef<XLSX.WorkBook | null>(null);
 
@@ -96,7 +94,15 @@ export function SetupTab() {
       const rows = XLSX.utils.sheet_to_json<RawRow>(sheet, { defval: "", raw: true });
 
       const found = attachHyperlinks(sheet, rows);
-      linkCountRef.current = found;
+
+      // Collect debug info directly from the sheet cells
+      const b2 = sheet["B2"];
+      const diagParts = [
+        `cell.f="${b2?.f ?? "(none)"}"`,
+        `cell.v="${b2?.v ?? "(none)"}"`,
+        `links found: ${found}`,
+      ];
+      setLinkDiag(diagParts.join(" | "));
 
       const hdrs = rows.length
         ? Object.keys(rows[0]).filter((k) => !k.startsWith("__link__"))
@@ -160,6 +166,11 @@ export function SetupTab() {
             </div>
           </div>
           <div className={`status-line ${statusIsError ? "error" : ""}`}>{statusMessage}</div>
+          {linkDiag !== null && (
+            <div className="status-line" style={{ fontFamily: "monospace", fontSize: 11, background: "#f0f4ff", padding: "4px 8px", borderRadius: 4, marginTop: 4 }}>
+              🔗 {linkDiag}
+            </div>
+          )}
           {headers.length > 0 && (
             <div className={requiredMissing.length ? "mapping-warning" : "mapping-ok"}>
               {requiredMissing.length
