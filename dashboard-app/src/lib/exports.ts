@@ -86,6 +86,7 @@ export function managementPackMetrics(rows: IncidentRow[], isOpenFn: (r: Inciden
 }
 
 const NAVY = "FF00384D";
+const LINK_BLUE = "FF1D4ED8";
 const BLUE = "FF2563EB";
 const WHITE = "FFFFFFFF";
 const RED_FILL = "FFFDE7E4";
@@ -322,9 +323,21 @@ export async function exportManagementPack(
   const detailHeaders = DETAIL_COLUMNS.map(([, label]) => label);
   styleHeaderRow(detail.addRow(detailHeaders), NAVY);
   detail.columns = detailHeaders.map((h) => ({ width: h === "Description" ? 50 : 18 }));
+  const dashCol = detailHeaders.indexOf("Dashboard") + 1;
+  const ticketCol = detailHeaders.indexOf("Ticket") + 1;
   detailRows.forEach((r) => {
     const rec = rowToExportRecord(r);
     const row = detail.addRow(detailHeaders.map((h) => rec[h]));
+    if (dashCol && r.dashboardUrl) {
+      const cell = row.getCell(dashCol);
+      cell.value = { text: r.ticketNumber || "Dashboard", hyperlink: r.dashboardUrl };
+      cell.font = { color: { argb: LINK_BLUE }, underline: true };
+    }
+    if (ticketCol && r.ticketUrl) {
+      const cell = row.getCell(ticketCol);
+      cell.value = { text: r.ticketId || "Ticket", hyperlink: r.ticketUrl };
+      cell.font = { color: { argb: LINK_BLUE }, underline: true };
+    }
     const priorityCell = row.getCell(detailHeaders.indexOf("Priority") + 1);
     const priority = String(rec["Priority"] || "");
     if (priority === "P1") {

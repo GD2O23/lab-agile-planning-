@@ -117,7 +117,7 @@ function App() {
         <div className="brand">
           <div>
             <h1>SBB Incident Intelligence Platform</h1>
-            <p className="subtitle">Rebuild Preview · Vite + React + TypeScript</p>
+            <p className="subtitle">Production V3</p>
           </div>
           <div className="subtitle">{rows.length ? `${rows.length.toLocaleString()} rows loaded` : "No workbook loaded"}</div>
         </div>
@@ -178,7 +178,7 @@ function App() {
       </main>
       <footer className="dashboard-footer">
         <div className="footer-title">SBB Incident Intelligence Platform</div>
-        <div>Rebuild Preview (Vite + React + TypeScript)</div>
+        <div>Production V3</div>
         <div>Product Owner: Geoff Deller</div>
         <div>Powered by Helix Data</div>
       </footer>
