@@ -26,6 +26,13 @@ function passFilter(
  * version) combined with the global state.drills[] array predicate logic.
  */
 export function matchesBase(r: IncidentRow, filters: Filters, modes: FilterModes, drills: GlobalDrill[]): boolean {
+  // Always exclude done tickets unless the user has explicitly filtered by status
+  const selectedStatuses = arrVal(filters["status"]).filter(Boolean);
+  if (!selectedStatuses.length) {
+    const sk = statusKey(r.status);
+    if (sk === "closed" || sk === "resolved" || sk === "cancelled") return false;
+  }
+
   if (!passFilter(filters, modes, "company", r.company, "Unspecified")) return false;
   if (!passFilter(filters, modes, "workType", r.workType, "Unclassified")) return false;
   if (!passFilter(filters, modes, "operationalGroup", r.operationalGroup, "Unclassified")) return false;
