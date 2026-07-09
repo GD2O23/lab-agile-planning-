@@ -31,26 +31,24 @@ function ageDisplay(n: number | null): React.ReactNode {
 }
 
 const columns: ColumnDef<IncidentRow>[] = [
-  { accessorKey: "ticketNumber", header: "Incident ID", cell: (c) => c.getValue<string>() || "-" },
-  { accessorKey: "ticketId", header: "Request ID", cell: (c) => c.getValue<string>() || "-" },
   {
-    id: "dashboard",
-    header: "Dashboard",
+    accessorKey: "ticketNumber",
+    header: "Incident ID",
     cell: ({ row }) =>
       row.original.dashboardUrl ? (
-        <a href={row.original.dashboardUrl} target="_blank" rel="noopener noreferrer">Dashboard</a>
+        <a href={row.original.dashboardUrl} target="_blank" rel="noopener noreferrer">{row.original.ticketNumber || "Open"}</a>
       ) : (
-        <span className="muted">No link</span>
+        row.original.ticketNumber || "-"
       ),
   },
   {
-    id: "ticket",
-    header: "Ticket",
+    accessorKey: "ticketId",
+    header: "Request ID",
     cell: ({ row }) =>
       row.original.ticketUrl ? (
-        <a href={row.original.ticketUrl} target="_blank" rel="noopener noreferrer">Ticket</a>
+        <a href={row.original.ticketUrl} target="_blank" rel="noopener noreferrer">{row.original.ticketId || "Open"}</a>
       ) : (
-        <span className="muted">No link</span>
+        row.original.ticketId || "-"
       ),
   },
   { accessorKey: "company", header: "Company", cell: (c) => c.getValue<string>() || "-" },
