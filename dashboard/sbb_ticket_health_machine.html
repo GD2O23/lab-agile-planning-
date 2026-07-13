@@ -116,7 +116,20 @@ button{cursor:pointer}
 .processing{margin-top:18px;border-radius:20px;border:1px solid var(--line);padding:14px;background:#f7fbff;color:#1c3d5c;display:none}.processing.show{display:block}.progress-bar{height:10px;background:#d9e8f5;border-radius:999px;overflow:hidden;margin-top:10px}.progress-bar span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--yellow),var(--red));animation:load 1.4s ease forwards}@keyframes load{to{width:100%}}
 .dashboard{margin-top:24px;display:none}.dashboard.show{display:block}.control-centre{padding:18px;margin-bottom:20px;position:relative;z-index:20;backdrop-filter:blur(10px);background:rgba(255,255,255,.94)}
 .control-centre.collapsed{position:sticky;top:8px;padding:12px 16px;box-shadow:0 14px 36px rgba(7,35,63,.12)}.control-centre.collapsed .controls,.control-centre.collapsed .map-note{display:none!important}.control-centre.collapsed .section-title{margin-bottom:0}.control-centre.collapsed #loadedSummary{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:900px}.collapse-toggle{min-width:132px}.controls{display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:12px;align-items:end}.field label{display:block;font-size:12px;font-weight:800;color:#53657a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}.field input,.field select{width:100%;height:42px;border-radius:13px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:0 12px}.field input[type="number"]{padding-right:4px}.field select:disabled,.field input:disabled{background:#eef2f6;color:#8a95a3;cursor:not-allowed}.action-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}.notice{font-size:13px;color:#53657a;line-height:1.4}.notice strong{color:#173552}.map-note{margin-top:14px;padding:12px 14px;background:#fff7df;border:1px solid #ffe2a1;border-radius:15px;color:#5c4212;display:none}.map-note.show{display:block}
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px}.kpi-card{padding:18px;border:1px solid var(--line);border-radius:22px;background:#fff;text-align:left;box-shadow:0 10px 26px rgba(7,35,63,.06);transition:.18s ease;min-height:128px}.kpi-card:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(7,35,63,.1)}.kpi-card.active{outline:3px solid rgba(0,167,165,.22)}.kpi-card .label{font-size:13px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.06em}.kpi-card .value{font-size:42px;font-weight:900;letter-spacing:-.05em;margin:6px 0}.kpi-card .sub{font-size:13px;color:var(--muted)}.kpi-card.green{background:linear-gradient(180deg,#fff,#effaf3);border-color:#bce7ce}.kpi-card.yellow{background:linear-gradient(180deg,#fff,#fff8e5);border-color:#ffdf88}.kpi-card.red{background:linear-gradient(180deg,#fff,#fff0f0);border-color:#ffb4b4}.kpi-card.blue{background:linear-gradient(180deg,#fff,#edf9ff);border-color:#b7e4f8}.kpi-card.purple{background:linear-gradient(180deg,#fff,#f3f1ff);border-color:#d3cdfd}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px}.kpi-card{padding:18px;border:1px solid var(--line);border-radius:22px;background:#fff;text-align:left;box-shadow:0 10px 26px rgba(7,35,63,.06);transition:.18s ease;min-height:128px}.kpi-card:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(7,35,63,.1)}.kpi-card.active{outline:3px solid rgba(0,167,165,.22)}.kpi-card .label{font-size:13px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.06em}.kpi-card .value{font-size:42px;font-weight:900;letter-spacing:-.05em;margin:6px 0}.kpi-card .sub{font-size:13px;color:var(--muted)}.kpi-card.green{background:linear-gradient(180deg,#fff,#effaf3);border-color:#bce7ce}.kpi-card.yellow{background:linear-gradient(180deg,#fff,#fff8e5);border-color:#ffdf88}.kpi-card.red{background:linear-gradient(180deg,#fff,#fff0f0);border-color:#ffb4b4}.kpi-card.blue{background:linear-gradient(180deg,#fff,#edf9ff);border-color:#b7e4f8}.kpi-card.purple{background:linear-gradient(180deg,#fff,#f3f1ff);border-color:#d3cdfd}.kpi-card.gold{background:linear-gradient(180deg,#fff,#fff9e8);border-color:#f3d98b;cursor:pointer}
+.pill.gold{background:#fff3cf;color:#8a6300}
+.board-section{position:relative;overflow:hidden}
+.board-meter{display:flex;height:26px;border-radius:999px;overflow:hidden;background:#eef2f6;border:1px solid var(--line)}
+.board-seg{height:100%;width:0;transition:width .9s cubic-bezier(.22,1,.36,1)}
+.board-seg.green{background:var(--green)}.board-seg.yellow{background:var(--yellow)}.board-seg.blocked{background:#0e5a8a}.board-seg.red{background:var(--red)}
+.board-headline{margin-top:14px;font-weight:800;font-size:17px;letter-spacing:-.01em}
+.confetti-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:5}
+.confetti-piece{position:absolute;top:-16px;width:8px;height:14px;opacity:0;border-radius:2px;animation:confetti-fall 1.7s ease-in forwards}
+@keyframes confetti-fall{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:0;transform:translateY(240px) rotate(430deg)}}
+.win-card{border:1px solid #f3d98b;border-radius:22px;background:linear-gradient(180deg,#fff,#fffaeb);padding:16px;box-shadow:0 10px 26px rgba(7,35,63,.06);display:flex;flex-direction:column;gap:10px}
+.win-head{display:flex;gap:12px;align-items:center}.win-emoji{font-size:28px}
+.win-count{font-size:15px;color:#5c4212}.win-count strong{font-size:22px;color:#8a6300}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .section{padding:20px;margin-bottom:20px}.section-title{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap}.health-meter{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}.lane{border-radius:18px;padding:15px;position:relative;overflow:hidden}.lane.green{background:var(--green-bg)}.lane.yellow{background:var(--yellow-bg)}.lane.red{background:var(--red-bg)}.lane h3{margin:0;font-size:15px}.lane .lane-num{font-size:36px;font-weight:900;margin:3px 0;letter-spacing:-.05em}.lane p{margin:0;color:#516172;font-size:13px}.lane:after{content:"";position:absolute;right:-20px;top:-20px;width:86px;height:86px;border-radius:50%;background:rgba(255,255,255,.55)}
 .wall-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(245px,1fr));gap:14px}.person-card{border:1px solid var(--line);border-radius:22px;background:#fff;padding:16px;box-shadow:0 10px 26px rgba(7,35,63,.06);transition:.18s ease;position:relative;overflow:hidden}.person-card:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(7,35,63,.1)}.person-card.active{outline:3px solid rgba(0,167,165,.24)}.person-card:before{content:"";position:absolute;inset:0 0 auto 0;height:6px;background:var(--teal)}.person-card.state-green:before{background:var(--green)}.person-card.state-yellow:before{background:var(--yellow)}.person-card.state-red:before{background:var(--red)}.person-card.state-blocked:before{background:#0e5a8a}.person-card.state-blocked{background:linear-gradient(180deg,#fff,#edf9ff)}.person-head{display:flex;gap:12px;align-items:center}.avatar{width:58px;height:58px;display:grid;place-items:center;border-radius:20px;font-size:30px;background:#eff5fb;border:1px solid #dce6f0;flex:0 0 auto}.person-name{font-weight:900;font-size:17px;line-height:1.15;overflow:hidden;text-overflow:ellipsis}.person-role{font-size:12px;color:var(--muted);margin-top:4px}.person-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}.mini-stat{border-radius:14px;background:#f5f8fb;padding:9px;text-align:center}.mini-stat strong{display:block;font-size:18px}.mini-stat span{font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:800}.tagline{margin-top:12px;font-size:13px;color:#4e5d6e;line-height:1.35}.leaderboard-empty{padding:24px;border:1px dashed #b8c7d8;border-radius:18px;color:var(--muted);text-align:center;background:#f8fbfe}
 .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:18px;background:#fff}table{border-collapse:separate;border-spacing:0;width:100%;min-width:1120px}th,td{padding:12px 12px;border-bottom:1px solid #edf1f6;text-align:left;vertical-align:top;font-size:13px}th{position:sticky;top:0;background:#f4f7fb;color:#52647a;font-size:12px;text-transform:uppercase;letter-spacing:.05em;z-index:2}tr:hover td{background:#fbfdff}.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 8px;font-size:12px;font-weight:900;white-space:nowrap}.pill.green{background:var(--green-bg);color:#0e7b3a}.pill.yellow{background:var(--yellow-bg);color:#8a5c00}.pill.red{background:var(--red-bg);color:#b42323}.pill.blue{background:#e8f5ff;color:#0e5a8a}.pill.gray{background:#edf1f5;color:#53657a}.ticket-link{font-family:var(--mono);font-weight:900;color:#0c426d}.desc{max-width:360px;color:#445568}.empty-state{padding:44px;text-align:center;color:var(--muted)}
@@ -206,6 +219,7 @@ button{cursor:pointer}
         <div class="field"><label for="searchBox">Search</label><input id="searchBox" type="search" placeholder="ticket, text, person…"></div>
         <div class="field"><label for="greenDays">Green up to</label><input id="greenDays" type="number" min="1" max="30" value="5"></div>
         <div class="field"><label for="redDays">Red from</label><input id="redDays" type="number" min="2" max="60" value="8"></div>
+        <div class="field"><label for="closedWindowDays">Closed within (days)</label><input id="closedWindowDays" type="number" min="1" max="60" value="7"></div>
         <div class="field"><label for="toneSelect">Tone</label><select id="toneSelect"><option value="nudge">Nudge mode</option><option value="shame">Direct stand-up mode</option></select></div>
         <div class="field"><label for="sheetSelect">Worksheet</label><select id="sheetSelect"></select></div>
         <div class="field"><label>&nbsp;</label><button class="ghost-btn" id="useLatestBtn" type="button" style="width:100%;height:42px">Use latest file date</button></div>
@@ -221,7 +235,23 @@ button{cursor:pointer}
       <button class="kpi-card red" data-bucket="red" type="button"><div class="label" id="redLabel">Red</div><div class="value" id="kpiRed">0</div><div class="sub">8+ quiet days</div></button>
       <button class="kpi-card purple" data-bucket="closure" type="button"><div class="label">Closure review</div><div class="value" id="kpiClosure">0</div><div class="sub">Pending + Client Action</div></button>
       <button class="kpi-card blue" data-bucket="external" type="button"><div class="label">Blocked / vendor wait</div><div class="value" id="kpiExternal">0</div><div class="sub">Vendor / CXNPL action</div></button>
+      <button class="kpi-card gold" id="kpiClosedCard" type="button"><div class="label">🏆 Closed recently</div><div class="value" id="kpiClosedRecent">0</div><div class="sub" id="kpiClosedSub">last 7 days</div></button>
     </div>
+
+    <section class="panel section board-section">
+      <div class="section-title">
+        <div><h2>🎮 Division board</h2><p id="boardSubtitle">Live snapshot across every active ticket in scope.</p></div>
+        <button class="mini-btn" id="soundToggleBtn" type="button" aria-pressed="false">🔈 Sound off</button>
+      </div>
+      <div class="board-meter" id="boardMeter">
+        <div class="board-seg green" id="segGreen"></div>
+        <div class="board-seg yellow" id="segYellow"></div>
+        <div class="board-seg blocked" id="segBlocked"></div>
+        <div class="board-seg red" id="segRed"></div>
+      </div>
+      <div class="board-headline" id="boardHeadline">Load an export to start the board.</div>
+      <div class="confetti-layer" id="confettiLayer"></div>
+    </section>
 
     <section class="panel section">
       <div class="section-title">
@@ -241,6 +271,14 @@ button{cursor:pointer}
         <span class="pill gray" id="selectedGroupPill">No submitter selected</span>
       </div>
       <div class="wall-grid" id="personWall"></div>
+    </section>
+
+    <section class="panel section" id="winsSection">
+      <div class="section-title">
+        <div><h2>🏆 Wins wall</h2><p id="winsSubtitle">Tickets closed recently. Shows up here even if you have zero open tickets right now.</p></div>
+        <span class="pill gray" id="winsCountPill">0 closed</span>
+      </div>
+      <div class="wall-grid" id="winsWall"></div>
     </section>
 
     <section class="panel section">
@@ -299,6 +337,8 @@ let fileName = '';
 let selectedBucket = 'all';
 let selectedGroup = '';
 let lastRenderRows = [];
+let soundOn = false;
+let lastCleanBoardCelebrated = false;
 let latestFileDate = null;
 let dedupeStats = {raw:0, unique:0, duplicates:0};
 
@@ -306,7 +346,9 @@ const $ = (id) => document.getElementById(id);
 const els = {
   fileInput: $('fileInput'), browseBtn: $('browseBtn'), dropZone: $('dropZone'), demoBtn: $('demoBtn'), resetBtn: $('resetBtn'), processingBox: $('processingBox'), processingTitle: $('processingTitle'), processingText: $('processingText'),
   dashboard: $('dashboard'), landingStage: $('landingStage'), loadedSummary: $('loadedSummary'), toggleControlBtn: $('toggleControlBtn'), controlCentre: document.querySelector('.control-centre'), asAtDate: $('asAtDate'), groupBySelect: $('groupBySelect'), ownerColumnSelect: $('ownerColumnSelect'), sheetSelect: $('sheetSelect'), ticketTypeFilter: $('ticketTypeFilter'), statusFilter: $('statusFilter'), companyScope: $('companyScope'), companyFilter: $('companyFilter'), activityDomainMode: $('activityDomainMode'), excludedDomains: $('excludedDomains'), includedDomains: $('includedDomains'), excludedActors: $('excludedActors'), priorityFilter: $('priorityFilter'), categoryFilter: $('categoryFilter'), searchBox: $('searchBox'), greenDays: $('greenDays'), redDays: $('redDays'), toneSelect: $('toneSelect'), useLatestBtn: $('useLatestBtn'), clearFiltersBtn: $('clearFiltersBtn'), mapNote: $('mapNote'),
-  kpiGrid: $('kpiGrid'), kpiActive: $('kpiActive'), kpiGreen: $('kpiGreen'), kpiYellow: $('kpiYellow'), kpiRed: $('kpiRed'), kpiClosure: $('kpiClosure'), kpiExternal: $('kpiExternal'), laneGreen: $('laneGreen'), laneYellow: $('laneYellow'), laneRed: $('laneRed'), activeBucketLabel: $('activeBucketLabel'), personWall: $('personWall'), wallTitle: $('wallTitle'), wallSubtitle: $('wallSubtitle'), selectedGroupPill: $('selectedGroupPill'), tableWrap: $('tableWrap'), tableCount: $('tableCount'), ticketTitle: $('ticketTitle'), ticketSubtitle: $('ticketSubtitle'), exportCurrentBtn: $('exportCurrentBtn'), exportRiskBtn: $('exportRiskBtn'), copySummaryBtn: $('copySummaryBtn'), greenLabel: $('greenLabel'), yellowLabel: $('yellowLabel'), redLabel: $('redLabel'), drawer: $('drawer'), drawerBackdrop: $('drawerBackdrop'), drawerClose: $('drawerClose'), drawerTitle: $('drawerTitle'), drawerMeta: $('drawerMeta'), drawerBody: $('drawerBody'), toast: $('toast')
+  kpiGrid: $('kpiGrid'), kpiActive: $('kpiActive'), kpiGreen: $('kpiGreen'), kpiYellow: $('kpiYellow'), kpiRed: $('kpiRed'), kpiClosure: $('kpiClosure'), kpiExternal: $('kpiExternal'), laneGreen: $('laneGreen'), laneYellow: $('laneYellow'), laneRed: $('laneRed'), activeBucketLabel: $('activeBucketLabel'), personWall: $('personWall'), wallTitle: $('wallTitle'), wallSubtitle: $('wallSubtitle'), selectedGroupPill: $('selectedGroupPill'), tableWrap: $('tableWrap'), tableCount: $('tableCount'), ticketTitle: $('ticketTitle'), ticketSubtitle: $('ticketSubtitle'), exportCurrentBtn: $('exportCurrentBtn'), exportRiskBtn: $('exportRiskBtn'), copySummaryBtn: $('copySummaryBtn'), greenLabel: $('greenLabel'), yellowLabel: $('yellowLabel'), redLabel: $('redLabel'), drawer: $('drawer'), drawerBackdrop: $('drawerBackdrop'), drawerClose: $('drawerClose'), drawerTitle: $('drawerTitle'), drawerMeta: $('drawerMeta'), drawerBody: $('drawerBody'), toast: $('toast'),
+  closedWindowDays: $('closedWindowDays'), kpiClosedCard: $('kpiClosedCard'), kpiClosedRecent: $('kpiClosedRecent'), kpiClosedSub: $('kpiClosedSub'), winsWall: $('winsWall'), winsCountPill: $('winsCountPill'), winsSubtitle: $('winsSubtitle'),
+  boardMeter: $('boardMeter'), segGreen: $('segGreen'), segYellow: $('segYellow'), segBlocked: $('segBlocked'), segRed: $('segRed'), boardHeadline: $('boardHeadline'), confettiLayer: $('confettiLayer'), soundToggleBtn: $('soundToggleBtn')
 };
 
 function init(){
@@ -319,13 +361,21 @@ function init(){
   els.dropZone.addEventListener('drop', (e) => { const f = e.dataTransfer.files && e.dataTransfer.files[0]; if(f) handleFile(f); });
   els.demoBtn.addEventListener('click', (e) => { e.stopPropagation(); loadDemo(); });
   els.resetBtn.addEventListener('click', resetMachine);
-  [els.asAtDate, els.ticketTypeFilter, els.statusFilter, els.companyScope, els.companyFilter, els.activityDomainMode, els.excludedDomains, els.includedDomains, els.excludedActors, els.priorityFilter, els.categoryFilter, els.searchBox, els.greenDays, els.redDays, els.toneSelect].forEach(el => { if(el) el.addEventListener('input', rerun); });
+  [els.asAtDate, els.ticketTypeFilter, els.statusFilter, els.companyScope, els.companyFilter, els.activityDomainMode, els.excludedDomains, els.includedDomains, els.excludedActors, els.priorityFilter, els.categoryFilter, els.searchBox, els.greenDays, els.redDays, els.closedWindowDays, els.toneSelect].forEach(el => { if(el) el.addEventListener('input', rerun); });
   els.groupBySelect.addEventListener('input', () => { selectedGroup = ''; rerun(); });
   if(els.ownerColumnSelect) els.ownerColumnSelect.addEventListener('input', () => { selectedGroup = ''; populateGroupBy(); els.groupBySelect.value = GROUP_OWNER; rerun(); });
   els.sheetSelect.addEventListener('change', () => selectSheet(Number(els.sheetSelect.value || 0)));
   els.useLatestBtn.addEventListener('click', () => { if(latestFileDate){ els.asAtDate.value = toISODate(latestFileDate); rerun(); showToast('As-at date set to latest date in file'); } });
   els.clearFiltersBtn.addEventListener('click', clearFilters);
-  els.kpiGrid.addEventListener('click', (e) => { const card = e.target.closest('.kpi-card'); if(card){ selectedBucket = card.dataset.bucket || 'all'; selectedGroup = ''; renderAll(); document.querySelector('.panel.section')?.scrollIntoView({block:'start'}); } });
+  els.kpiGrid.addEventListener('click', (e) => {
+    if(e.target.closest('#kpiClosedCard')){ els.winsWall.scrollIntoView({block:'start', behavior:'smooth'}); return; }
+    const card = e.target.closest('.kpi-card'); if(card){ selectedBucket = card.dataset.bucket || 'all'; selectedGroup = ''; renderAll(); document.querySelector('.panel.section')?.scrollIntoView({block:'start'}); }
+  });
+  if(els.soundToggleBtn) els.soundToggleBtn.addEventListener('click', () => {
+    soundOn = !soundOn;
+    els.soundToggleBtn.textContent = soundOn ? '🔊 Sound on' : '🔈 Sound off';
+    els.soundToggleBtn.setAttribute('aria-pressed', String(soundOn));
+  });
   els.personWall.addEventListener('click', (e) => { const card = e.target.closest('.person-card'); if(card){ selectedGroup = selectedGroup === card.dataset.group ? '' : card.dataset.group; renderAll(); $('ticketTitle').scrollIntoView({block:'start'}); } });
   els.tableWrap.addEventListener('click', (e) => { const row = e.target.closest('tr[data-ticket-index]'); if(row){ openDrawer(Number(row.dataset.ticketIndex)); } });
   els.drawerBackdrop.addEventListener('click', closeDrawer); els.drawerClose.addEventListener('click', closeDrawer);
@@ -828,7 +878,94 @@ function filteredRows(base=enriched){
     .filter(r => !selectedGroup || r.groupBy === selectedGroup);
 }
 function searchableText(r){ const groupMode=els.groupBySelect.value; const groupDataField = (groupMode === GROUP_OWNER || groupMode === GROUP_TEAM) ? '' : groupMode; const fields=[mapped.id,mapped.request,mapped.ticketType,mapped.status,mapped.substatus,mapped.company,mapped.priority,mapped.category,mapped.subCategory,mapped.description,ownerField(),mapped.group,mapped.submitter,mapped.lastModifiedBy,groupDataField].filter(Boolean); return key([r.ticketType, r.company, r.groupBy, r.owner, r.group, r.activityActor, r.activityPolicy?.reason, ...fields.map(f => r.row[f])].join(' ')); }
-function renderAll(){ renderTone(); renderMapNote(); renderKpis(); renderWall(); renderTable(); }
+function closedWindowDays(){ return Math.max(1, Number(els.closedWindowDays?.value || 7)); }
+function closedRecentRows(){
+  const ref = referenceDate(); const windowDays = closedWindowDays();
+  const q = key(els.searchBox.value); const ticketType = els.ticketTypeFilter?.value || ''; const company=selectedCompany(); const pri=els.priorityFilter.value; const cat=els.categoryFilter.value;
+  return enriched.filter(r => !r.active)
+    .filter(r => !ticketType || r.ticketType === ticketType || cleanValue(get(r.row, mapped.ticketType)) === ticketType)
+    .filter(r => !company || r.company === company || cleanValue(get(r.row, mapped.company)) === company)
+    .filter(r => !pri || cleanValue(get(r.row, mapped.priority)) === pri)
+    .filter(r => !cat || cleanValue(get(r.row, mapped.category)) === cat)
+    .filter(r => !q || searchableText(r).includes(q))
+    .filter(r => r.rawLastActivityDate && diffDays(r.rawLastActivityDate, ref) <= windowDays);
+}
+function winsSummaries(){
+  const map = new Map();
+  closedRecentRows().forEach(r => {
+    const name = r.groupBy || 'Unassigned / unmapped';
+    if(!map.has(name)) map.set(name, {name, total:0, rows:[]});
+    const g = map.get(name); g.total++; g.rows.push(r);
+  });
+  return Array.from(map.values()).sort((a,b)=> b.total-a.total || a.name.localeCompare(b.name));
+}
+function renderWins(){
+  const rows = closedRecentRows(); const windowDays = closedWindowDays();
+  if(els.kpiClosedRecent) els.kpiClosedRecent.textContent = fmt(rows.length);
+  if(els.kpiClosedSub) els.kpiClosedSub.textContent = `last ${windowDays}d`;
+  if(els.winsCountPill) els.winsCountPill.textContent = `${fmt(rows.length)} closed`;
+  if(els.winsSubtitle) els.winsSubtitle.textContent = `Tickets closed in the last ${windowDays} days. Shows up here even if you have zero open tickets right now.`;
+  const groups = winsSummaries();
+  if(!els.winsWall) return;
+  if(!groups.length){ els.winsWall.innerHTML = `<div class="leaderboard-empty">No tickets closed in the last ${windowDays} days yet. Once the export shows a closed/resolved ticket, the person who closed it shows up here - even with an empty open queue.</div>`; return; }
+  els.winsWall.innerHTML = groups.map(g => winCard(g)).join('');
+}
+function winCard(g){
+  return `<div class="win-card"><div class="win-head"><div class="win-emoji">🏅</div><div><div class="person-name">${escapeHtml(g.name)}</div><div class="person-role">${escapeHtml(groupFieldLabel(els.groupBySelect.value))}</div></div></div><div class="win-count"><strong>${fmt(g.total)}</strong> closed</div></div>`;
+}
+function renderBoard(){
+  if(!els.boardHeadline) return;
+  const active = scopedRows(enriched); const pingable = active.filter(r=>r.pingEligible);
+  const green = pingable.filter(r=>r.severity==='green').length;
+  const yellow = pingable.filter(r=>r.severity==='yellow').length;
+  const red = pingable.filter(r=>r.severity==='red').length;
+  const blocked = active.filter(r=>r.externalWait).length;
+  const total = green + yellow + red + blocked;
+  const denom = total || 1;
+  if(els.segGreen) els.segGreen.style.width = (green/denom*100)+'%';
+  if(els.segYellow) els.segYellow.style.width = (yellow/denom*100)+'%';
+  if(els.segBlocked) els.segBlocked.style.width = (blocked/denom*100)+'%';
+  if(els.segRed) els.segRed.style.width = (red/denom*100)+'%';
+  if(!total){ els.boardHeadline.textContent = 'No active tickets in scope.'; lastCleanBoardCelebrated = false; return; }
+  if(red === 0){
+    els.boardHeadline.textContent = `🎉 Clean board - zero red across ${fmt(total)} active ticket${total===1?'':'s'}.`;
+    if(!lastCleanBoardCelebrated){ celebrate(); lastCleanBoardCelebrated = true; }
+  } else {
+    els.boardHeadline.textContent = `${fmt(red)} ticket${red===1?'':'s'} need escalation right now out of ${fmt(total)} active.`;
+    lastCleanBoardCelebrated = false;
+  }
+}
+function celebrate(){
+  if(els.confettiLayer){
+    const colors = ['#27ae60','#f5a623','#00a7a5','#6b5bff','#e34b4b'];
+    for(let i=0;i<28;i++){
+      const p = document.createElement('span'); p.className='confetti-piece';
+      p.style.left = Math.random()*100+'%';
+      p.style.background = colors[Math.floor(Math.random()*colors.length)];
+      p.style.animationDelay = (Math.random()*0.4)+'s';
+      els.confettiLayer.appendChild(p);
+      setTimeout(()=>p.remove(), 2200);
+    }
+  }
+  if(soundOn) playChime();
+}
+function playChime(){
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = ctx.currentTime;
+    [523.25, 659.25, 783.99].forEach((freq, i) => {
+      const osc = ctx.createOscillator(); const gain = ctx.createGain();
+      osc.type = 'sine'; osc.frequency.value = freq;
+      osc.connect(gain); gain.connect(ctx.destination);
+      const start = now + i*0.12;
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.18, start+0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start+0.5);
+      osc.start(start); osc.stop(start+0.55);
+    });
+  }catch(e){}
+}
+function renderAll(){ renderTone(); renderMapNote(); renderKpis(); renderBoard(); renderWall(); renderWins(); renderTable(); }
 function renderTone(){ const direct = els.toneSelect.value === 'shame'; els.greenLabel.textContent = direct ? 'Healthy' : 'Green'; els.yellowLabel.textContent = direct ? 'Action list' : 'Yellow'; els.redLabel.textContent = direct ? 'Escalate' : 'Red'; }
 function renderMapNote(){
   const missing=[]; if(!ownerField()) missing.push('submitter / ticket holder'); if(!mapped.category) missing.push('category'); if(!mapped.substatus) missing.push('substatus/status reason');
@@ -879,15 +1016,16 @@ function renderWall(){
   }
   const groups = groupSummaries();
   if(!groups.length){ els.personWall.innerHTML = `<div class="leaderboard-empty">No submitter cards match the current filters.</div>`; return; }
-  els.personWall.innerHTML = groups.map(g => personCard(g)).join('');
+  const winsMap = new Map(winsSummaries().map(w => [w.name, w.total]));
+  els.personWall.innerHTML = groups.map(g => personCard(g, winsMap.get(g.name) || 0)).join('');
 }
-function personCard(g){
+function personCard(g, closedRecent=0){
   const emoji = g.state === 'red' ? '🚨' : (g.state === 'blocked' ? '🔒' : (g.state === 'yellow' ? '😬' : '😎'));
   const tone = els.toneSelect.value;
   const clauses = [];
-  if(g.red > 0) clauses.push(tone==='shame' ? 'Needs a clear update or action before stand-up.' : 'Escalation risk. Needs action or a clear update.');
-  if(g.yellow > 0) clauses.push('A polite nudge should keep this from turning red.');
-  if(g.external > 0) clauses.push(`${fmt(g.external)} ticket${g.external===1?'':'s'} blocked on vendor/CXNPL action - not on this person.`);
+  if(g.red > 0) clauses.push(tone==='shame' ? 'On you before stand-up: take action or flag the blocker now.' : "You're the responsible party here - take action, or reach out if you need a hand.");
+  if(g.yellow > 0) clauses.push('A quick update keeps this on track before it goes quiet too long.');
+  if(g.external > 0) clauses.push(`${fmt(g.external)} ticket${g.external===1?'':'s'} blocked on vendor/CXNPL action - not on this person, but flag it if you need help chasing it.`);
   if(g.closure > 0) clauses.push(`${fmt(g.closure)} closure review.`);
   if(!clauses.length) clauses.push('Healthy rhythm. Keep the cadence going.');
   const line = clauses.join(' ');
@@ -896,9 +1034,14 @@ function personCard(g){
   const oldestText = oldestValue === 9999 ? 'unknown' : fmt(oldestValue) + 'd';
   const oldestLabel = hasActionable ? 'Oldest quiet streak' : 'Oldest blocked ticket';
   const activeCls = selectedGroup === g.name ? ' active' : '';
+  const badges = [];
+  if(g.red === 0 && g.yellow === 0 && g.external === 0 && g.green > 0) badges.push('<span class="pill green">🧹 Clean board</span>');
+  if(closedRecent > 0) badges.push(`<span class="pill gold">🏅 ${fmt(closedRecent)} closed</span>`);
+  const badgesHtml = badges.length ? `<div class="badges">${badges.join('')}</div>` : '';
   return `<button type="button" class="person-card state-${g.state}${activeCls}" data-group="${escapeHtml(g.name)}">
     <div class="person-head"><div class="avatar">${emoji}</div><div><div class="person-name">${escapeHtml(g.name)}</div><div class="person-role">${escapeHtml(groupFieldLabel(els.groupBySelect.value))}</div></div></div>
-    <div class="person-stats"><div class="mini-stat"><strong>${fmt(g.total)}</strong><span>Total</span></div><div class="mini-stat"><strong>${fmt(g.yellow)}</strong><span>Yellow</span></div><div class="mini-stat"><strong>${fmt(g.red)}</strong><span>Red</span></div><div class="mini-stat"><strong>${fmt(g.external)}</strong><span>Blocked</span></div></div>
+    <div class="person-stats"><div class="mini-stat"><strong>${fmt(g.total)}</strong><span>Total</span></div><div class="mini-stat"><strong>${fmt(g.yellow)}</strong><span>Yellow</span></div><div class="mini-stat"><strong>${fmt(g.red)}</strong><span>Red</span></div><div class="mini-stat"><strong>${fmt(g.external)}</strong><span>Held</span></div></div>
+    ${badgesHtml}
     <div class="tagline">${escapeHtml(line)} ${escapeHtml(oldestLabel)}: <strong>${oldestText}</strong>.</div>
   </button>`;
 }
@@ -933,7 +1076,7 @@ function openDrawer(index){
 }
 function closeDrawer(){ els.drawer.classList.remove('open'); }
 function clearFilters(){ if(els.ticketTypeFilter) els.ticketTypeFilter.value=''; els.statusFilter.value=''; if(els.companyFilter) els.companyFilter.value=''; if(els.companyScope) els.companyScope.value='off'; if(els.activityDomainMode) els.activityDomainMode.value='exclude'; if(els.excludedDomains) els.excludedDomains.value=DEFAULT_EXCLUDED_DOMAINS; if(els.includedDomains) els.includedDomains.value=DEFAULT_INCLUDED_DOMAINS; if(els.excludedActors) els.excludedActors.value=DEFAULT_EXCLUDED_ACTORS; syncCompanyControls(); els.priorityFilter.value=''; els.categoryFilter.value=''; els.searchBox.value=''; selectedBucket='all'; selectedGroup=''; renderAll(); }
-function resetMachine(){ workbookSheets=[]; rawRows=[]; rawLinks=[]; objects=[]; enriched=[]; mapped={}; dedupeStats={raw:0,unique:0,duplicates:0}; headerRow=[]; fileName=''; selectedBucket='all'; selectedGroup=''; if(els.companyScope) els.companyScope.value='off'; if(els.companyFilter) els.companyFilter.value=''; if(els.activityDomainMode) els.activityDomainMode.value='exclude'; if(els.excludedDomains) els.excludedDomains.value=DEFAULT_EXCLUDED_DOMAINS; if(els.includedDomains) els.includedDomains.value=DEFAULT_INCLUDED_DOMAINS; if(els.excludedActors) els.excludedActors.value=DEFAULT_EXCLUDED_ACTORS; if(els.ownerColumnSelect) els.ownerColumnSelect.innerHTML='<option value="">Auto-detect / none</option>'; els.dashboard.classList.remove('show'); els.fileInput.value=''; setProcessing('', '', false); showToast('Machine reset'); window.scrollTo({top:0,behavior:'smooth'}); }
+function resetMachine(){ workbookSheets=[]; rawRows=[]; rawLinks=[]; objects=[]; enriched=[]; mapped={}; dedupeStats={raw:0,unique:0,duplicates:0}; headerRow=[]; fileName=''; selectedBucket='all'; selectedGroup=''; lastCleanBoardCelebrated=false; if(els.companyScope) els.companyScope.value='off'; if(els.companyFilter) els.companyFilter.value=''; if(els.activityDomainMode) els.activityDomainMode.value='exclude'; if(els.excludedDomains) els.excludedDomains.value=DEFAULT_EXCLUDED_DOMAINS; if(els.includedDomains) els.includedDomains.value=DEFAULT_INCLUDED_DOMAINS; if(els.excludedActors) els.excludedActors.value=DEFAULT_EXCLUDED_ACTORS; if(els.ownerColumnSelect) els.ownerColumnSelect.innerHTML='<option value="">Auto-detect / none</option>'; els.dashboard.classList.remove('show'); els.fileInput.value=''; setProcessing('', '', false); showToast('Machine reset'); window.scrollTo({top:0,behavior:'smooth'}); }
 
 function exportRows(rows, filename){
   if(!rows.length){ showToast('No rows to export'); return; }
