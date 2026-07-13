@@ -858,10 +858,14 @@ function groupSummaries(){
   const map = new Map();
   active.forEach(r => {
     const name = r.groupBy || 'Unassigned / unmapped';
-    if(!map.has(name)) map.set(name,{name,total:0,green:0,yellow:0,red:0,closure:0,external:0,noActivity:0,oldest:0,rows:[]});
-    const g=map.get(name); g.total++; if(r.pingEligible) g[r.severity]++; if(r.closureReview)g.closure++; if(r.externalWait)g.external++; if(r.noActivity)g.noActivity++; g.oldest=Math.max(g.oldest, r.daysQuiet ?? 9999); g.rows.push(r);
+    if(!map.has(name)) map.set(name,{name,total:0,green:0,yellow:0,red:0,closure:0,external:0,noActivity:0,oldestActionable:0,oldestBlocked:0,rows:[]});
+    const g=map.get(name); g.total++;
+    if(r.pingEligible){ g[r.severity]++; g.oldestActionable=Math.max(g.oldestActionable, r.daysQuiet ?? 9999); }
+    if(r.closureReview)g.closure++;
+    if(r.externalWait){ g.external++; g.oldestBlocked=Math.max(g.oldestBlocked, r.daysQuiet ?? 9999); }
+    if(r.noActivity)g.noActivity++; g.rows.push(r);
   });
-  return Array.from(map.values()).map(g => ({...g, state:g.red>0?'red':(g.yellow>0?'yellow':(g.green>0?'green':(g.external>0?'blocked':'green'))), score:g.red*100 + g.yellow*20 + g.noActivity*5 + g.oldest/10})).sort((a,b)=> b.score-a.score || b.total-a.total || a.name.localeCompare(b.name));
+  return Array.from(map.values()).map(g => ({...g, state:g.red>0?'red':(g.external>0?'blocked':(g.yellow>0?'yellow':'green')), score:g.red*100 + g.external*40 + g.yellow*20 + g.noActivity*5 + g.oldestActionable/10})).sort((a,b)=> b.score-a.score || b.total-a.total || a.name.localeCompare(b.name));
 }
 function renderWall(){
   const fieldLabel = groupFieldLabel(els.groupBySelect.value);
@@ -878,16 +882,24 @@ function renderWall(){
   els.personWall.innerHTML = groups.map(g => personCard(g)).join('');
 }
 function personCard(g){
-  const emoji = g.state === 'red' ? '🚨' : (g.state === 'yellow' ? '😬' : (g.state === 'blocked' ? '🔒' : '😎'));
+  const emoji = g.state === 'red' ? '🚨' : (g.state === 'blocked' ? '🔒' : (g.state === 'yellow' ? '😬' : '😎'));
   const tone = els.toneSelect.value;
-  let line = g.state === 'red' ? (tone==='shame' ? 'Needs a clear update or action before stand-up.' : 'Escalation risk. Needs action or a clear update.') : g.state === 'yellow' ? 'A polite nudge should keep this from turning red.' : g.state === 'blocked' ? 'Not on this person - all open tickets are waiting on vendor/CXNPL action.' : 'Healthy rhythm. Keep the cadence going.';
-  if(g.closure) line += ` ${g.closure} closure review.`;
-  if(g.external) line += ` ${g.external} blocked on vendor/CXNPL.`;
+  const clauses = [];
+  if(g.red > 0) clauses.push(tone==='shame' ? 'Needs a clear update or action before stand-up.' : 'Escalation risk. Needs action or a clear update.');
+  if(g.yellow > 0) clauses.push('A polite nudge should keep this from turning red.');
+  if(g.external > 0) clauses.push(`${fmt(g.external)} ticket${g.external===1?'':'s'} blocked on vendor/CXNPL action - not on this person.`);
+  if(g.closure > 0) clauses.push(`${fmt(g.closure)} closure review.`);
+  if(!clauses.length) clauses.push('Healthy rhythm. Keep the cadence going.');
+  const line = clauses.join(' ');
+  const hasActionable = g.green > 0 || g.yellow > 0 || g.red > 0;
+  const oldestValue = hasActionable ? g.oldestActionable : g.oldestBlocked;
+  const oldestText = oldestValue === 9999 ? 'unknown' : fmt(oldestValue) + 'd';
+  const oldestLabel = hasActionable ? 'Oldest quiet streak' : 'Oldest blocked ticket';
   const activeCls = selectedGroup === g.name ? ' active' : '';
   return `<button type="button" class="person-card state-${g.state}${activeCls}" data-group="${escapeHtml(g.name)}">
     <div class="person-head"><div class="avatar">${emoji}</div><div><div class="person-name">${escapeHtml(g.name)}</div><div class="person-role">${escapeHtml(groupFieldLabel(els.groupBySelect.value))}</div></div></div>
     <div class="person-stats"><div class="mini-stat"><strong>${fmt(g.total)}</strong><span>Total</span></div><div class="mini-stat"><strong>${fmt(g.yellow)}</strong><span>Yellow</span></div><div class="mini-stat"><strong>${fmt(g.red)}</strong><span>Red</span></div><div class="mini-stat"><strong>${fmt(g.external)}</strong><span>Blocked</span></div></div>
-    <div class="tagline">${escapeHtml(line)} Oldest quiet streak: <strong>${g.oldest === 9999 ? 'unknown' : fmt(g.oldest) + 'd'}</strong>.</div>
+    <div class="tagline">${escapeHtml(line)} ${escapeHtml(oldestLabel)}: <strong>${oldestText}</strong>.</div>
   </button>`;
 }
 function severityRank(s){ return s==='red'?3:s==='yellow'?2:s==='green'?1:0; }
