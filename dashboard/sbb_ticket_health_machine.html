@@ -116,6 +116,8 @@ button{cursor:pointer}
 .processing{margin-top:18px;border-radius:20px;border:1px solid var(--line);padding:14px;background:#f7fbff;color:#1c3d5c;display:none}.processing.show{display:block}.progress-bar{height:10px;background:#d9e8f5;border-radius:999px;overflow:hidden;margin-top:10px}.progress-bar span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--yellow),var(--red));animation:load 1.4s ease forwards}@keyframes load{to{width:100%}}
 .dashboard{margin-top:24px;display:none}.dashboard.show{display:block}.control-centre{padding:18px;margin-bottom:20px;position:relative;z-index:20;backdrop-filter:blur(10px);background:rgba(255,255,255,.94)}
 .control-centre.collapsed{position:sticky;top:8px;padding:12px 16px;box-shadow:0 14px 36px rgba(7,35,63,.12)}.control-centre.collapsed .controls,.control-centre.collapsed .map-note{display:none!important}.control-centre.collapsed .section-title{margin-bottom:0}.control-centre.collapsed #loadedSummary{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:900px}.collapse-toggle{min-width:132px}.controls{display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:12px;align-items:end}.field label{display:block;font-size:12px;font-weight:800;color:#53657a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}.field input,.field select{width:100%;height:42px;border-radius:13px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:0 12px}.field input[type="number"]{padding-right:4px}.field select:disabled,.field input:disabled{background:#eef2f6;color:#8a95a3;cursor:not-allowed}.action-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}.notice{font-size:13px;color:#53657a;line-height:1.4}.notice strong{color:#173552}.map-note{margin-top:14px;padding:12px 14px;background:#fff7df;border:1px solid #ffe2a1;border-radius:15px;color:#5c4212;display:none}.map-note.show{display:block}
+.roster-row{margin-top:14px;padding:12px 14px;background:#f6f4ff;border:1px solid #ddd6ff;border-radius:15px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}.roster-status{font-size:13px;color:#4b3f8f}.roster-actions{display:flex;gap:8px}
+.roster-card{border-color:#ddd6ff!important;background:linear-gradient(180deg,#fff,#f8f7ff)!important}.roster-card .win-count{color:#4b3f8f}
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px}.kpi-card{padding:18px;border:1px solid var(--line);border-radius:22px;background:#fff;text-align:left;box-shadow:0 10px 26px rgba(7,35,63,.06);transition:.18s ease;min-height:128px}.kpi-card:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(7,35,63,.1)}.kpi-card.active{outline:3px solid rgba(0,167,165,.22)}.kpi-card .label{font-size:13px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.06em}.kpi-card .value{font-size:42px;font-weight:900;letter-spacing:-.05em;margin:6px 0}.kpi-card .sub{font-size:13px;color:var(--muted)}.kpi-card.green{background:linear-gradient(180deg,#fff,#effaf3);border-color:#bce7ce}.kpi-card.yellow{background:linear-gradient(180deg,#fff,#fff8e5);border-color:#ffdf88}.kpi-card.red{background:linear-gradient(180deg,#fff,#fff0f0);border-color:#ffb4b4}.kpi-card.blue{background:linear-gradient(180deg,#fff,#edf9ff);border-color:#b7e4f8}.kpi-card.purple{background:linear-gradient(180deg,#fff,#f3f1ff);border-color:#d3cdfd}.kpi-card.gold{background:linear-gradient(180deg,#fff,#fff9e8);border-color:#f3d98b;cursor:pointer}
 .pill.gold{background:#fff3cf;color:#8a6300}
 .board-section{position:relative;overflow:hidden}
@@ -180,6 +182,14 @@ button{cursor:pointer}
         <strong id="processingTitle">Machine starting…</strong>
         <div id="processingText">Reading workbook, detecting fields, classifying ticket health.</div>
         <div class="progress-bar"><span></span></div>
+      </div>
+      <div class="roster-row">
+        <div class="roster-status" id="rosterStatus">No team roster loaded. Optional second upload: a name list so anyone who's never raised a ticket gets a positive callout too.</div>
+        <div class="roster-actions">
+          <button class="ghost-btn" id="rosterBtn" type="button">Load team roster</button>
+          <button class="ghost-btn" id="rosterClearBtn" type="button" style="display:none">Clear roster</button>
+          <input id="rosterInput" type="file" accept=".csv,.xlsx,.xls" style="display:none">
+        </div>
       </div>
     </div>
 
@@ -281,6 +291,14 @@ button{cursor:pointer}
       <div class="wall-grid" id="winsWall"></div>
     </section>
 
+    <section class="panel section" id="rosterSection" style="display:none">
+      <div class="section-title">
+        <div><h2>🌟 Roster check</h2><p id="rosterSubtitle">Everyone on the team roster who has no ticket history at all in this export.</p></div>
+        <span class="pill gray" id="rosterSummaryPill">Roster not loaded</span>
+      </div>
+      <div class="wall-grid" id="rosterWall"></div>
+    </section>
+
     <section class="panel section">
       <div class="section-title">
         <div><h2 id="ticketTitle">Ticket evidence</h2><p id="ticketSubtitle">The table shows the rows behind the current click-through state.</p></div>
@@ -339,6 +357,8 @@ let selectedGroup = '';
 let lastRenderRows = [];
 let soundOn = false;
 let lastCleanBoardCelebrated = false;
+let roster = [];
+const ROSTER_STORAGE_KEY = 'sbbTicketHealthRoster_v1';
 let latestFileDate = null;
 let dedupeStats = {raw:0, unique:0, duplicates:0};
 
@@ -348,7 +368,8 @@ const els = {
   dashboard: $('dashboard'), landingStage: $('landingStage'), loadedSummary: $('loadedSummary'), toggleControlBtn: $('toggleControlBtn'), controlCentre: document.querySelector('.control-centre'), asAtDate: $('asAtDate'), groupBySelect: $('groupBySelect'), ownerColumnSelect: $('ownerColumnSelect'), sheetSelect: $('sheetSelect'), ticketTypeFilter: $('ticketTypeFilter'), statusFilter: $('statusFilter'), companyScope: $('companyScope'), companyFilter: $('companyFilter'), activityDomainMode: $('activityDomainMode'), excludedDomains: $('excludedDomains'), includedDomains: $('includedDomains'), excludedActors: $('excludedActors'), priorityFilter: $('priorityFilter'), categoryFilter: $('categoryFilter'), searchBox: $('searchBox'), greenDays: $('greenDays'), redDays: $('redDays'), toneSelect: $('toneSelect'), useLatestBtn: $('useLatestBtn'), clearFiltersBtn: $('clearFiltersBtn'), mapNote: $('mapNote'),
   kpiGrid: $('kpiGrid'), kpiActive: $('kpiActive'), kpiGreen: $('kpiGreen'), kpiYellow: $('kpiYellow'), kpiRed: $('kpiRed'), kpiClosure: $('kpiClosure'), kpiExternal: $('kpiExternal'), laneGreen: $('laneGreen'), laneYellow: $('laneYellow'), laneRed: $('laneRed'), activeBucketLabel: $('activeBucketLabel'), personWall: $('personWall'), wallTitle: $('wallTitle'), wallSubtitle: $('wallSubtitle'), selectedGroupPill: $('selectedGroupPill'), tableWrap: $('tableWrap'), tableCount: $('tableCount'), ticketTitle: $('ticketTitle'), ticketSubtitle: $('ticketSubtitle'), exportCurrentBtn: $('exportCurrentBtn'), exportRiskBtn: $('exportRiskBtn'), copySummaryBtn: $('copySummaryBtn'), greenLabel: $('greenLabel'), yellowLabel: $('yellowLabel'), redLabel: $('redLabel'), drawer: $('drawer'), drawerBackdrop: $('drawerBackdrop'), drawerClose: $('drawerClose'), drawerTitle: $('drawerTitle'), drawerMeta: $('drawerMeta'), drawerBody: $('drawerBody'), toast: $('toast'),
   closedWindowDays: $('closedWindowDays'), kpiClosedCard: $('kpiClosedCard'), kpiClosedRecent: $('kpiClosedRecent'), kpiClosedSub: $('kpiClosedSub'), winsWall: $('winsWall'), winsCountPill: $('winsCountPill'), winsSubtitle: $('winsSubtitle'),
-  boardMeter: $('boardMeter'), segGreen: $('segGreen'), segYellow: $('segYellow'), segBlocked: $('segBlocked'), segRed: $('segRed'), boardHeadline: $('boardHeadline'), confettiLayer: $('confettiLayer'), soundToggleBtn: $('soundToggleBtn')
+  boardMeter: $('boardMeter'), segGreen: $('segGreen'), segYellow: $('segYellow'), segBlocked: $('segBlocked'), segRed: $('segRed'), boardHeadline: $('boardHeadline'), confettiLayer: $('confettiLayer'), soundToggleBtn: $('soundToggleBtn'),
+  rosterBtn: $('rosterBtn'), rosterInput: $('rosterInput'), rosterClearBtn: $('rosterClearBtn'), rosterStatus: $('rosterStatus'), rosterSection: $('rosterSection'), rosterSummaryPill: $('rosterSummaryPill'), rosterSubtitle: $('rosterSubtitle'), rosterWall: $('rosterWall')
 };
 
 function init(){
@@ -361,6 +382,10 @@ function init(){
   els.dropZone.addEventListener('drop', (e) => { const f = e.dataTransfer.files && e.dataTransfer.files[0]; if(f) handleFile(f); });
   els.demoBtn.addEventListener('click', (e) => { e.stopPropagation(); loadDemo(); });
   els.resetBtn.addEventListener('click', resetMachine);
+  loadRosterFromStorage();
+  if(els.rosterBtn) els.rosterBtn.addEventListener('click', () => els.rosterInput.click());
+  if(els.rosterInput) els.rosterInput.addEventListener('change', (e) => { if(e.target.files && e.target.files[0]) handleRosterFile(e.target.files[0]); e.target.value=''; });
+  if(els.rosterClearBtn) els.rosterClearBtn.addEventListener('click', clearRoster);
   [els.asAtDate, els.ticketTypeFilter, els.statusFilter, els.companyScope, els.companyFilter, els.activityDomainMode, els.excludedDomains, els.includedDomains, els.excludedActors, els.priorityFilter, els.categoryFilter, els.searchBox, els.greenDays, els.redDays, els.closedWindowDays, els.toneSelect].forEach(el => { if(el) el.addEventListener('input', rerun); });
   els.groupBySelect.addEventListener('input', () => { selectedGroup = ''; rerun(); });
   if(els.ownerColumnSelect) els.ownerColumnSelect.addEventListener('input', () => { selectedGroup = ''; populateGroupBy(); els.groupBySelect.value = GROUP_OWNER; rerun(); });
@@ -965,7 +990,93 @@ function playChime(){
     });
   }catch(e){}
 }
-function renderAll(){ renderTone(); renderMapNote(); renderKpis(); renderBoard(); renderWall(); renderWins(); renderTable(); }
+function normalizeRosterName(raw){
+  let s = cleanValue(raw).replace(/[.]/g,'').trim();
+  if(!s) return '';
+  let parts;
+  if(s.includes(',')){ const [last, first] = s.split(',').map(p=>p.trim()); parts = [first, last]; }
+  else parts = s.split(/\s+/);
+  return parts.filter(Boolean).map(p=>p.toLowerCase()).sort().join(' ');
+}
+async function parseRosterFile(file){
+  const lower = file.name.toLowerCase();
+  let rows;
+  if(lower.endsWith('.csv')){ rows = parseCsv(await file.text()); }
+  else { const sheets = await parseXlsx(file); rows = sheets[0]?.rows || []; }
+  if(!rows.length) return [];
+  const headerKeywords = ['name','employee','staff','member','person','submitter','holder'];
+  const header = rows[0].map(h => key(h));
+  const nameColIdx = header.findIndex(h => headerKeywords.some(k => h.includes(k)));
+  const dataRows = nameColIdx === -1 ? rows : rows.slice(1);
+  const colIdx = nameColIdx === -1 ? 0 : nameColIdx;
+  const seen = new Set();
+  const names = [];
+  dataRows.forEach(r => { const n = cleanValue(r[colIdx]); if(n && !seen.has(key(n))){ seen.add(key(n)); names.push(n); } });
+  return names;
+}
+async function handleRosterFile(file){
+  try{
+    const names = await parseRosterFile(file);
+    if(!names.length){ showToast('No names found in that file'); return; }
+    roster = names;
+    saveRosterToStorage();
+    updateRosterStatusUI();
+    renderRoster();
+    showToast(`Roster loaded: ${names.length} names`);
+  }catch(err){
+    console.error(err);
+    showToast('Could not read that roster file');
+  }
+}
+function clearRoster(){
+  roster = [];
+  try{ localStorage.removeItem(ROSTER_STORAGE_KEY); }catch(e){}
+  updateRosterStatusUI();
+  renderRoster();
+  showToast('Roster cleared');
+}
+function saveRosterToStorage(){
+  try{ localStorage.setItem(ROSTER_STORAGE_KEY, JSON.stringify(roster)); }catch(e){}
+}
+function loadRosterFromStorage(){
+  try{
+    const raw = localStorage.getItem(ROSTER_STORAGE_KEY);
+    if(raw){ const parsed = JSON.parse(raw); if(Array.isArray(parsed)) roster = parsed; }
+  }catch(e){}
+  updateRosterStatusUI();
+}
+function updateRosterStatusUI(){
+  if(!els.rosterStatus) return;
+  if(roster.length){
+    els.rosterStatus.textContent = `Team roster loaded: ${fmt(roster.length)} names (saved in this browser).`;
+    if(els.rosterClearBtn) els.rosterClearBtn.style.display = '';
+  } else {
+    els.rosterStatus.textContent = 'No team roster loaded. Optional: load a name list to see who\'s never needed a ticket.';
+    if(els.rosterClearBtn) els.rosterClearBtn.style.display = 'none';
+  }
+}
+function knownTicketHolderKeys(){
+  const set = new Set();
+  enriched.forEach(r => { const n = normalizeRosterName(r.owner); if(n) set.add(n); });
+  return set;
+}
+function renderRoster(){
+  if(!els.rosterSection) return;
+  if(!roster.length){ els.rosterSection.style.display = 'none'; return; }
+  els.rosterSection.style.display = '';
+  if(!enriched.length){
+    els.rosterSummaryPill.textContent = 'Load an export to check the roster';
+    els.rosterWall.innerHTML = `<div class="leaderboard-empty">Roster is loaded. Load a Helix export to check it against ticket history.</div>`;
+    return;
+  }
+  const known = knownTicketHolderKeys();
+  const spotless = []; let matchedCount = 0;
+  roster.forEach(name => { const n = normalizeRosterName(name); if(n && known.has(n)) matchedCount++; else spotless.push(name); });
+  els.rosterSummaryPill.textContent = `${fmt(roster.length)} on roster · ${fmt(spotless.length)} spotless`;
+  if(!spotless.length){ els.rosterWall.innerHTML = `<div class="leaderboard-empty">Everyone on the roster has ticket history in this export.</div>`; return; }
+  els.rosterWall.innerHTML = spotless.map(name => `<div class="win-card roster-card"><div class="win-head"><div class="win-emoji">🌟</div><div><div class="person-name">${escapeHtml(name)}</div><div class="person-role">On roster, no ticket history in this export</div></div></div><div class="win-count">Spotless record</div></div>`).join('');
+}
+function renderAll(){ renderTone(); renderMapNote(); renderKpis(); renderBoard(); renderWall(); renderWins(); renderRoster(); renderTable(); }
 function renderTone(){ const direct = els.toneSelect.value === 'shame'; els.greenLabel.textContent = direct ? 'Healthy' : 'Green'; els.yellowLabel.textContent = direct ? 'Action list' : 'Yellow'; els.redLabel.textContent = direct ? 'Escalate' : 'Red'; }
 function renderMapNote(){
   const missing=[]; if(!ownerField()) missing.push('submitter / ticket holder'); if(!mapped.category) missing.push('category'); if(!mapped.substatus) missing.push('substatus/status reason');
