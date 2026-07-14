@@ -3953,7 +3953,7 @@ function App() {
   }
 
   function exportJSON() {
-    const b = new Blob([JSON.stringify({plan,risks,comms,milestones},null,2)],{type:"application/json"});
+    const b = new Blob([JSON.stringify({plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, ganttTemplate, techSpecs},null,2)],{type:"application/json"});
     const u = URL.createObjectURL(b);
     const a = document.createElement("a"); a.href=u; a.download=`gsb-migration-${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(u);
   }
@@ -3967,6 +3967,17 @@ function App() {
         if (s.risks) setRisks(s.risks);
         if (s.comms) setComms(s.comms);
         if (s.milestones) setMilestones(s.milestones);
+        if (s.bannerGoLive) setBannerGoLive(s.bannerGoLive);
+        if (s.bannerDeact) setBannerDeact(s.bannerDeact);
+        if (s.bannerNote) setBannerNote(s.bannerNote);
+        if (s.orgName !== undefined) setOrgName(s.orgName);
+        if (s.dashTitle) setDashTitle(s.dashTitle);
+        if (s.cohortDefs) setCohortDefs(s.cohortDefs);
+        if (s.faqs) setFaqs(s.faqs);
+        if (s.questions) setQuestions(s.questions);
+        if (s.gantt) setGantt(s.gantt);
+        if (s.ganttTemplate) setGanttTemplate(s.ganttTemplate);
+        if (s.techSpecs) setTechSpecs(s.techSpecs);
       } catch(_) { alert("Could not read file."); }
     };
     reader.readAsText(file); e.target.value = "";
