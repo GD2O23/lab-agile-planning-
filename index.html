@@ -1665,6 +1665,22 @@ const DEFAULT_TECH_SPECS = [
   }
 ];
 
+// ── Technical Requirements & Plan (structured document sections) ───────────
+const DEFAULT_TECH_PLAN = [
+  {id:"tpl1",  title:"Purpose & Objectives",                     content:""},
+  {id:"tpl2",  title:"Scope (In Scope / Out of Scope)",           content:""},
+  {id:"tpl3",  title:"Current State Architecture (As-Is)",        content:""},
+  {id:"tpl4",  title:"Target State Architecture (To-Be)",         content:""},
+  {id:"tpl5",  title:"System & Third-Party Dependencies",         content:""},
+  {id:"tpl6",  title:"Data Migration & Conversion Approach",      content:""},
+  {id:"tpl7",  title:"Security, Privacy & Compliance Requirements", content:""},
+  {id:"tpl8",  title:"Non-Functional Requirements",               content:"Performance, availability, scalability, monitoring/alerting."},
+  {id:"tpl9",  title:"Testing & Acceptance Strategy",             content:""},
+  {id:"tpl10", title:"Cutover / Rollout Plan",                    content:""},
+  {id:"tpl11", title:"Rollback & Contingency Plan",                content:""},
+  {id:"tpl12", title:"Assumptions, Constraints & Open Technical Risks", content:""},
+];
+
 
 
 function StatusBadge({status}) {
@@ -2687,11 +2703,13 @@ function QuestionsTab({data, setData, editMode}) {
         ))}
       </div>
 
-      {editMode && (
-        <div style={{display:"flex",justifyContent:"flex-end",marginBottom:12}} className="no-print">
+      <div style={{display:"flex",justifyContent:"flex-end",gap:8,marginBottom:12}} className="no-print">
+        <button onClick={() => downloadCSV("open-questions.csv",toCSV(data,["status","text"]))}
+          style={{padding:"6px 12px",borderRadius:8,border:"1px solid #e2e8f0",background:"#fff",color:"#475569",fontSize:11,fontWeight:600,cursor:"pointer"}}>Export CSV</button>
+        {editMode && (
           <button onClick={addRow} style={{padding:"6px 12px",borderRadius:8,border:"none",background:"#0f172a",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer"}}>+ Add Question</button>
-        </div>
-      )}
+        )}
+      </div>
 
       <div style={{background:"#fff",borderRadius:12,border:"1px solid #e2e8f0",overflow:"hidden",boxShadow:"0 2px 8px rgba(0,0,0,0.05)"}}>
         <table style={{width:"100%",borderCollapse:"collapse"}}>
@@ -3652,6 +3670,102 @@ function TechSpecTab({data, setData, editMode}) {
   );
 }
 
+// ── Technical Requirements & Plan ───────────────────────────────────────────
+function TechPlanTab({data, setData, editMode}) {
+  const dragHandlers = useDraggableRows(data, setData, editMode);
+
+  function update(id, field, val) { setData(prev => prev.map(s => s.id === id ? {...s, [field]:val} : s)); }
+  function addSection() {
+    setData(prev => [...prev, {id:mkId(), title:"New Section", content:""}]);
+  }
+  function delSection(id) { setData(prev => prev.filter(s => s.id !== id)); }
+  function moveSection(idx, dir) {
+    setData(prev => {
+      const next = [...prev];
+      const target = idx + dir;
+      if (target < 0 || target >= next.length) return next;
+      [next[idx], next[target]] = [next[target], next[idx]];
+      return next;
+    });
+  }
+
+  const filledCount = data.filter(s => (s.content||"").trim()).length;
+
+  return (
+    <div>
+      <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap",alignItems:"center"}} className="no-print">
+        <div style={{background:"#fff",borderRadius:10,padding:"12px 18px",
+          border:"1px solid #e2e8f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)",flexShrink:0}}>
+          <div style={{fontSize:22,fontWeight:800,color:"#0f172a"}}>{data.length}</div>
+          <div style={{fontSize:10,fontWeight:700,color:"#64748b",textTransform:"uppercase",letterSpacing:0.8}}>Sections</div>
+        </div>
+        <div style={{background:"#fff",borderRadius:10,padding:"12px 18px",
+          border:"1px solid #e2e8f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)",flexShrink:0}}>
+          <div style={{fontSize:22,fontWeight:800,color:"#166534"}}>{filledCount}</div>
+          <div style={{fontSize:10,fontWeight:700,color:"#166534",textTransform:"uppercase",letterSpacing:0.8}}>Populated</div>
+        </div>
+        <div style={{marginLeft:"auto",display:"flex",gap:8}}>
+          <button onClick={() => downloadCSV("technical-requirements-plan.csv",toCSV(data,["title","content"]))}
+            style={{padding:"8px 14px",borderRadius:8,border:"1px solid #e2e8f0",background:"#fff",
+              color:"#475569",fontSize:11,fontWeight:600,cursor:"pointer"}}>Export CSV</button>
+          {editMode && (
+            <button onClick={addSection}
+              style={{padding:"8px 14px",borderRadius:8,border:"none",background:"#0f172a",
+                color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer"}}>+ Add Section</button>
+          )}
+        </div>
+      </div>
+
+      {data.map((s, i) => (
+        <div key={s.id} {...dragHandlers(i)}
+          style={{background:"#fff",borderRadius:12,border:"1px solid #e2e8f0",
+            boxShadow:"0 2px 8px rgba(0,0,0,0.04)",marginBottom:14,overflow:"hidden"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,padding:"10px 16px",
+            background:"#0f172a",cursor:editMode?"grab":"default"}}>
+            {editMode && <span style={{color:"#64748b",fontSize:14,cursor:"grab",userSelect:"none"}} title="Drag to reorder">⠿</span>}
+            {editMode
+              ? <input value={s.title} onChange={e=>update(s.id,"title",e.target.value)}
+                  style={{flex:1,fontSize:13,fontWeight:700,color:"#fff",background:"transparent",
+                    border:"1px solid rgba(255,255,255,0.3)",borderRadius:4,padding:"3px 6px",fontFamily:"inherit"}}/>
+              : <span style={{flex:1,fontSize:13,fontWeight:700,color:"#fff"}}>{s.title || <span style={{color:"#64748b",fontStyle:"italic"}}>Untitled section</span>}</span>}
+            {editMode && (
+              <>
+                <button onClick={()=>moveSection(i,-1)} disabled={i===0}
+                  style={{fontSize:10,padding:"2px 6px",border:"1px solid #334155",borderRadius:3,background:"#1e293b",cursor:"pointer",color:"#94a3b8"}}>▲</button>
+                <button onClick={()=>moveSection(i,1)} disabled={i===data.length-1}
+                  style={{fontSize:10,padding:"2px 6px",border:"1px solid #334155",borderRadius:3,background:"#1e293b",cursor:"pointer",color:"#94a3b8"}}>▼</button>
+                <button onClick={()=>delSection(s.id)}
+                  style={{color:"#f87171",background:"none",border:"none",cursor:"pointer",fontSize:14}}>✕</button>
+              </>
+            )}
+          </div>
+          <div style={{padding:"14px 16px"}}>
+            {editMode
+              ? <textarea value={s.content} onChange={e=>update(s.id,"content",e.target.value)}
+                  placeholder="Describe this section..."
+                  style={{width:"100%",minHeight:100,fontSize:12,fontFamily:"inherit",color:"#334155",
+                    border:"1px solid #6366f1",borderRadius:6,padding:"8px 10px",resize:"vertical",lineHeight:1.6}}/>
+              : <p style={{fontSize:12,color:"#334155",lineHeight:1.7,margin:0,whiteSpace:"pre-wrap"}}>
+                  {s.content || <span style={{color:"#94a3b8",fontStyle:"italic"}}>Not yet populated.</span>}
+                </p>}
+          </div>
+        </div>
+      ))}
+
+      {data.length === 0 && (
+        <div style={{textAlign:"center",padding:"40px 20px",color:"#94a3b8",fontSize:13,
+          background:"#fff",borderRadius:12,border:"1px dashed #e2e8f0"}}>
+          No sections yet. {editMode ? "Click “+ Add Section” to start." : "Switch to Edit Mode to add sections."}
+        </div>
+      )}
+
+      <div style={{marginTop:4,fontSize:11,color:"#94a3b8"}}>
+        {filledCount} of {data.length} sections populated · drag ⠿ to reorder in Edit Mode
+      </div>
+    </div>
+  );
+}
+
 // ── Tab 7: FAQs ───────────────────────────────────────────────────────────────
 function FAQsTab({data, setData, editMode}) {
   const [filterCat, setFilterCat] = useState("All");
@@ -3858,6 +3972,7 @@ function App() {
   const [gantt, setGantt] = useState(DEFAULT_GANTT);
   const [ganttTemplate, setGanttTemplate] = useState(DEFAULT_GANTT_TEMPLATE);
   const [techSpecs, setTechSpecs] = useState(DEFAULT_TECH_SPECS);
+  const [techPlan, setTechPlan] = useState(DEFAULT_TECH_PLAN);
   const [faqs, setFaqs] = useState(DEFAULT_FAQS);
   const [cohortDefs, setCohortDefs] = useState(DEFAULT_COHORT_DEFS);
   const [orgName, setOrgName] = useState("");
@@ -3876,21 +3991,29 @@ function App() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const s = JSON.parse(raw);
-        if (s.plan) setPlan(s.plan);
-        if (s.risks) setRisks(s.risks);
-        if (s.comms) setComms(prev => ({...prev, ...s.comms}));
-        if (s.milestones) setMilestones(s.milestones);
-        if (s.bannerGoLive) setBannerGoLive(s.bannerGoLive);
-        if (s.cohortDefs) setCohortDefs(s.cohortDefs);
-        if (s.orgName !== undefined) setOrgName(s.orgName);
-        if (s.dashTitle) setDashTitle(s.dashTitle);
-        if (s.bannerDeact) setBannerDeact(s.bannerDeact);
-        if (s.bannerNote) setBannerNote(s.bannerNote);
-        if (s.questions) setQuestions(s.questions);
-        if (s.gantt) setGantt(s.gantt);
-        if (s.ganttTemplate) setGanttTemplate(s.ganttTemplate);
-        if (s.techSpecs) setTechSpecs(s.techSpecs);
-        if (s.faqs) setFaqs(s.faqs);
+        // Type-guarded, same as importJSON: a malformed/corrupted localStorage
+        // value (e.g. left over from a bug, or manual tampering) should never
+        // be able to crash the app on load — skip anything the wrong shape
+        // rather than handing a Tab component data it can't render.
+        const isArr = v => Array.isArray(v);
+        const isObj = v => v && typeof v === "object" && !Array.isArray(v);
+        const isStr = v => typeof v === "string";
+        if (isArr(s.plan)) setPlan(s.plan);
+        if (isArr(s.risks)) setRisks(s.risks);
+        if (isObj(s.comms)) setComms(prev => ({...prev, ...s.comms}));
+        if (isArr(s.milestones)) setMilestones(s.milestones);
+        if (isStr(s.bannerGoLive)) setBannerGoLive(s.bannerGoLive);
+        if (isArr(s.cohortDefs)) setCohortDefs(s.cohortDefs);
+        if (s.orgName !== undefined && isStr(s.orgName)) setOrgName(s.orgName);
+        if (isStr(s.dashTitle)) setDashTitle(s.dashTitle);
+        if (isStr(s.bannerDeact)) setBannerDeact(s.bannerDeact);
+        if (isStr(s.bannerNote)) setBannerNote(s.bannerNote);
+        if (isArr(s.questions)) setQuestions(s.questions);
+        if (isArr(s.gantt)) setGantt(s.gantt);
+        if (isArr(s.ganttTemplate)) setGanttTemplate(s.ganttTemplate);
+        if (isArr(s.techSpecs)) setTechSpecs(s.techSpecs);
+        if (isArr(s.techPlan)) setTechPlan(s.techPlan);
+        if (isArr(s.faqs)) setFaqs(s.faqs);
       }
     } catch(_) {}
     setLoaded(true);
@@ -3899,12 +4022,12 @@ function App() {
   useEffect(() => {
     if (!loaded) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, ganttTemplate, techSpecs}));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, ganttTemplate, techSpecs, techPlan}));
       setSaveStatus("saved");
       const t = setTimeout(() => setSaveStatus("idle"), 1800);
       return () => clearTimeout(t);
     } catch(_) {}
-  }, [plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, ganttTemplate, techSpecs, loaded]);
+  }, [plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, ganttTemplate, techSpecs, techPlan, loaded]);
 
   function pushUndo(snapshot) {
     setUndoStack(prev => {
@@ -3924,7 +4047,7 @@ function App() {
     });
   }
   function enterEditMode() {
-    setEditSnapshot({plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, ganttTemplate, techSpecs});
+    setEditSnapshot({plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, ganttTemplate, techSpecs, techPlan});
     setUndoStack([]);
     setEditMode(true);
   }
@@ -3944,12 +4067,17 @@ function App() {
       setComms(editSnapshot.comms);
       setMilestones(editSnapshot.milestones);
       if (editSnapshot.bannerGoLive) setBannerGoLive(editSnapshot.bannerGoLive);
-      if (editSnapshot.cohortDefs) setCohortDefs(editSnapshot.cohortDefs);
-      if (editSnapshot.orgName !== undefined) setOrgName(editSnapshot.orgName);
-      if (editSnapshot.faqs) setFaqs(editSnapshot.faqs);
-      if (editSnapshot.dashTitle) setDashTitle(editSnapshot.dashTitle);
       if (editSnapshot.bannerDeact) setBannerDeact(editSnapshot.bannerDeact);
       if (editSnapshot.bannerNote) setBannerNote(editSnapshot.bannerNote);
+      if (editSnapshot.orgName !== undefined) setOrgName(editSnapshot.orgName);
+      if (editSnapshot.dashTitle) setDashTitle(editSnapshot.dashTitle);
+      if (editSnapshot.cohortDefs) setCohortDefs(editSnapshot.cohortDefs);
+      if (editSnapshot.faqs) setFaqs(editSnapshot.faqs);
+      if (editSnapshot.questions) setQuestions(editSnapshot.questions);
+      if (editSnapshot.gantt) setGantt(editSnapshot.gantt);
+      if (editSnapshot.ganttTemplate) setGanttTemplate(editSnapshot.ganttTemplate);
+      if (editSnapshot.techSpecs) setTechSpecs(editSnapshot.techSpecs);
+      if (editSnapshot.techPlan) setTechPlan(editSnapshot.techPlan);
     }
     setShowDiscard(false);
     setEditSnapshot(null);
@@ -3958,7 +4086,16 @@ function App() {
   }
 
   function exportJSON() {
-    const b = new Blob([JSON.stringify({plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, ganttTemplate, techSpecs},null,2)],{type:"application/json"});
+    const payload = {
+      _meta: {
+        source: "gsb-migration-dashboard",
+        schemaVersion: 2,
+        exportedAt: new Date().toISOString(),
+      },
+      plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle,
+      cohortDefs, faqs, questions, gantt, ganttTemplate, techSpecs, techPlan,
+    };
+    const b = new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
     const u = URL.createObjectURL(b);
     const a = document.createElement("a"); a.href=u; a.download=`gsb-migration-${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(u);
   }
@@ -3966,24 +4103,66 @@ function App() {
     const file = e.target.files[0]; if (!file) return;
     const reader = new FileReader();
     reader.onload = ev => {
+      let s;
       try {
-        const s = JSON.parse(ev.target.result);
-        if (s.plan) setPlan(s.plan);
-        if (s.risks) setRisks(s.risks);
-        if (s.comms) setComms(s.comms);
-        if (s.milestones) setMilestones(s.milestones);
-        if (s.bannerGoLive) setBannerGoLive(s.bannerGoLive);
-        if (s.bannerDeact) setBannerDeact(s.bannerDeact);
-        if (s.bannerNote) setBannerNote(s.bannerNote);
-        if (s.orgName !== undefined) setOrgName(s.orgName);
-        if (s.dashTitle) setDashTitle(s.dashTitle);
-        if (s.cohortDefs) setCohortDefs(s.cohortDefs);
-        if (s.faqs) setFaqs(s.faqs);
-        if (s.questions) setQuestions(s.questions);
-        if (s.gantt) setGantt(s.gantt);
-        if (s.ganttTemplate) setGanttTemplate(s.ganttTemplate);
-        if (s.techSpecs) setTechSpecs(s.techSpecs);
-      } catch(_) { alert("Could not read file."); }
+        s = JSON.parse(ev.target.result);
+      } catch(err) {
+        alert("Could not read this file — it doesn't look like valid JSON.\n\n" + err.message);
+        e.target.value = "";
+        return;
+      }
+      if (!s || typeof s !== "object" || Array.isArray(s)) {
+        alert("Could not read this file — expected a Save Dashboard JSON export.");
+        e.target.value = "";
+        return;
+      }
+
+      // Type-checked import: only apply a field if it's the shape we expect,
+      // and report anything that was present-but-invalid or missing so data
+      // dropped by a lossy transfer (email/DLP/file-share sanitisation) is
+      // caught immediately instead of silently disappearing.
+      const imported = [];
+      const skipped = [];
+      function applyArray(key, setter, label) {
+        if (s[key] === undefined) return;
+        if (Array.isArray(s[key])) { setter(s[key]); imported.push(`${label} (${s[key].length})`); }
+        else skipped.push(label);
+      }
+      function applyObject(key, setter, label) {
+        if (s[key] === undefined) return;
+        if (s[key] && typeof s[key] === "object" && !Array.isArray(s[key])) { setter(s[key]); imported.push(label); }
+        else skipped.push(label);
+      }
+      function applyString(key, setter, label) {
+        if (s[key] === undefined) return;
+        if (typeof s[key] === "string") { setter(s[key]); imported.push(label); }
+        else skipped.push(label);
+      }
+
+      applyArray("plan", setPlan, "Plan & Timeline");
+      applyArray("risks", setRisks, "Risks & Mitigations");
+      applyObject("comms", setComms, "Communication Plans");
+      applyArray("milestones", setMilestones, "Milestones");
+      applyString("bannerGoLive", setBannerGoLive, "Go-Live banner");
+      applyString("bannerDeact", setBannerDeact, "Deactivation banner");
+      applyString("bannerNote", setBannerNote, "Banner note");
+      applyString("orgName", setOrgName, "Organisation name");
+      applyString("dashTitle", setDashTitle, "Dashboard title");
+      applyArray("cohortDefs", setCohortDefs, "Cohort definitions");
+      applyArray("faqs", setFaqs, "FAQs");
+      applyArray("questions", setQuestions, "Open Questions");
+      applyArray("gantt", setGantt, "Project Plan");
+      applyArray("ganttTemplate", setGanttTemplate, "Project Plan Template");
+      applyArray("techSpecs", setTechSpecs, "Technical Spec");
+      applyArray("techPlan", setTechPlan, "Tech Requirements & Plan");
+
+      if (imported.length === 0 && skipped.length === 0) {
+        alert("No recognised dashboard data found in this file.");
+      } else {
+        let msg = "Import complete.\n\nImported:\n" + (imported.length ? imported.map(x=>"• "+x).join("\n") : "(none)");
+        if (skipped.length) msg += "\n\nSkipped — present in the file but not in the expected format, left unchanged:\n" + skipped.map(x=>"• "+x).join("\n");
+        alert(msg);
+      }
     };
     reader.readAsText(file); e.target.value = "";
   }
@@ -4025,7 +4204,7 @@ function App() {
     setComms(prev => { const next={...prev}; delete next[key]; return next; });
   }
 
-  const TABS = ["Plan & Timeline","Risks & Mitigations","Communication Plans","Customer Journeys","Open Questions","Project Plan","FAQs","Project Plan Template","Technical Spec"];
+  const TABS = ["Plan & Timeline","Risks & Mitigations","Communication Plans","Customer Journeys","Open Questions","Project Plan","FAQs","Project Plan Template","Technical Spec","Tech Requirements & Plan"];
   if (!loaded) return <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",color:"#64748b",fontFamily:"'Sora',sans-serif"}}>Loading...</div>;
 
   return (
@@ -4056,12 +4235,12 @@ function App() {
             </button>
           </div>
         </div>
-        <div style={{display:"flex",gap:2,padding:"10px 24px 0"}}>
+        <div style={{display:"flex",gap:2,padding:"10px 24px 0",overflowX:"auto",overflowY:"hidden"}} className="no-print">
           {TABS.map((t,i) => (
             <button key={t} onClick={()=>setTab(i)}
               style={{padding:"9px 18px",border:"none",cursor:"pointer",fontWeight:tab===i?700:500,fontSize:12,
                 background:tab===i?"#f1f5f9":"transparent",color:tab===i?"#0f172a":"#94a3b8",
-                borderRadius:"8px 8px 0 0",transition:"all 0.15s"}}>
+                borderRadius:"8px 8px 0 0",transition:"all 0.15s",whiteSpace:"nowrap",flexShrink:0}}>
               {t}
             </button>
           ))}
@@ -4103,6 +4282,7 @@ function App() {
           footerNote="Blank project plan template — add your own milestones and tasks, or upload an Excel plan to get started"
           csvName="project-plan-template.csv"/>}
         {tab===8 && <TechSpecTab data={techSpecs} setData={setTechSpecs} editMode={editMode}/>}
+        {tab===9 && <TechPlanTab data={techPlan} setData={setTechPlan} editMode={editMode}/>}
       </div>
 
       {showDiscard && (
@@ -4141,7 +4321,62 @@ function App() {
   );
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, info) {
+    console.error("Dashboard crashed:", error, info);
+  }
+  resetSavedData() {
+    try { localStorage.removeItem(STORAGE_KEY); } catch(_) {}
+    window.location.reload();
+  }
+  render() {
+    if (!this.state.hasError) return this.props.children;
+    return (
+      <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",
+        background:"#f1f5f9",fontFamily:"'Sora',sans-serif",padding:24}}>
+        <div style={{background:"#fff",borderRadius:16,padding:"32px 36px",maxWidth:520,
+          boxShadow:"0 24px 64px rgba(0,0,0,0.15)",border:"1px solid #e2e8f0"}}>
+          <div style={{fontSize:32,marginBottom:12}}>⚠️</div>
+          <div style={{fontSize:18,fontWeight:800,color:"#0f172a",marginBottom:8}}>Something went wrong</div>
+          <div style={{fontSize:13,color:"#475569",lineHeight:1.6,marginBottom:20}}>
+            The dashboard hit an unexpected error and stopped rendering instead of showing a blank screen.
+            Your saved data in this browser hasn't been touched — try reloading first. If it keeps happening
+            (usually caused by a corrupted or partial import), you can reset the saved data below and start
+            fresh from defaults.
+          </div>
+          {this.state.error && (
+            <div style={{fontSize:11,fontFamily:"monospace",color:"#94a3b8",background:"#f8fafc",
+              border:"1px solid #e2e8f0",borderRadius:8,padding:"8px 10px",marginBottom:20,
+              maxHeight:120,overflow:"auto",whiteSpace:"pre-wrap"}}>
+              {String((this.state.error && this.state.error.message) || this.state.error)}
+            </div>
+          )}
+          <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+            <button onClick={() => window.location.reload()}
+              style={{padding:"9px 18px",borderRadius:8,border:"none",background:"#0f172a",
+                color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>
+              Reload Page
+            </button>
+            <button onClick={() => this.resetSavedData()}
+              style={{padding:"9px 18px",borderRadius:8,border:"1px solid #e2e8f0",background:"#fff",
+                color:"#9f1239",fontSize:12,fontWeight:700,cursor:"pointer"}}>
+              Reset Saved Data &amp; Reload
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<ErrorBoundary><App/></ErrorBoundary>);
 </script>
 </body>
 </html>
