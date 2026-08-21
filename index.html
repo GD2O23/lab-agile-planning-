@@ -4831,10 +4831,10 @@ function BRSummaryTab({impact, uat, defects, onNavigate}) {
   const statusColor = {"To Do":"#94a3b8","In Progress":"#3b82f6","Complete":"#22c55e","Not Applicable":"#cbd5e1"};
 
   const cards = [
-    {label:"Total Items", val:total, color:"#0f172a", onClick:()=>onNavigate("Impact Assessment",{impacted:"All",status:"All"})},
-    {label:"Impacted", val:impacted, color:"#b45309", onClick:()=>onNavigate("Impact Assessment",{impacted:"Yes",status:"All"})},
-    {label:"Complete", val:complete, color:"#166534", onClick:()=>onNavigate("Impact Assessment",{impacted:"All",status:"Complete"})},
-    {label:"Overall Progress", val:pct+"%", color:"#0891b2", onClick:()=>onNavigate("Impact Assessment",{impacted:"All",status:"All"})},
+    {label:"Total Items", val:total, color:"#0f172a", onClick:()=>onNavigate("impact",{impacted:"All",status:"All"})},
+    {label:"Impacted", val:impacted, color:"#b45309", onClick:()=>onNavigate("impact",{impacted:"Yes",status:"All"})},
+    {label:"Complete", val:complete, color:"#166534", onClick:()=>onNavigate("impact",{impacted:"All",status:"Complete"})},
+    {label:"Overall Progress", val:pct+"%", color:"#0891b2", onClick:()=>onNavigate("impact",{impacted:"All",status:"All"})},
   ];
 
   const uatDone = uat.filter(r=>r.status==="Validated"||r.status==="Complete").length;
@@ -4864,7 +4864,7 @@ function BRSummaryTab({impact, uat, defects, onNavigate}) {
         <div style={{display:"flex",gap:20,flexWrap:"wrap"}}>
           {Object.entries(byStatus).map(([k,v]) => (
             <div key={k} style={{display:"flex",alignItems:"center",gap:6,cursor:"pointer"}}
-              onClick={()=>onNavigate("Impact Assessment",{impacted:"All",status:k})}>
+              onClick={()=>onNavigate("impact",{impacted:"All",status:k})}>
               <div style={{width:10,height:10,borderRadius:3,background:statusColor[k]}}/>
               <span style={{fontSize:11,color:"#334155",fontWeight:600}}>{k}</span>
               <span style={{fontSize:11,color:"#94a3b8"}}>{v}</span>
@@ -4874,11 +4874,11 @@ function BRSummaryTab({impact, uat, defects, onNavigate}) {
       </div>
 
       <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:12}}>
-        <div onClick={()=>onNavigate("UAT")} style={{background:"#fff",borderRadius:10,padding:"14px 16px",border:"1px solid #e2e8f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)",cursor:"pointer"}}>
+        <div onClick={()=>onNavigate("uat")} style={{background:"#fff",borderRadius:10,padding:"14px 16px",border:"1px solid #e2e8f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)",cursor:"pointer"}}>
           <div style={{fontSize:20,fontWeight:800,color:"#0f172a"}}>{uatDone} / {uat.length}</div>
           <div style={{fontSize:11,color:"#64748b",fontWeight:700,textTransform:"uppercase",letterSpacing:0.8}}>UAT Test Cases Validated</div>
         </div>
-        <div onClick={()=>onNavigate("Defects")} style={{background:"#fff",borderRadius:10,padding:"14px 16px",border:"1px solid #e2e8f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)",cursor:"pointer"}}>
+        <div onClick={()=>onNavigate("defects")} style={{background:"#fff",borderRadius:10,padding:"14px 16px",border:"1px solid #e2e8f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)",cursor:"pointer"}}>
           <div style={{fontSize:20,fontWeight:800,color:openDefects>0?"#9f1239":"#166534"}}>{openDefects}</div>
           <div style={{fontSize:11,color:"#64748b",fontWeight:700,textTransform:"uppercase",letterSpacing:0.8}}>Open Defects</div>
         </div>
@@ -4890,9 +4890,11 @@ function BRSummaryTab({impact, uat, defects, onNavigate}) {
 }
 
 // ── Business Readiness container: sub-tab pills across all 7 sections ──────
-function BusinessReadinessTab({br, setBr, editMode}) {
-  const [section, setSection] = useState("Summary");
+function BusinessReadinessTab({br, setBr, editMode, subTabLabels, updateSubTabLabel, renamingTabs}) {
+  const [section, setSection] = useState("summary");
   const [impactFilter, setImpactFilter] = useState({impacted:"All", status:"All"});
+  const labels = subTabLabels.businessReadiness || DEFAULT_SUBTAB_LABELS.businessReadiness;
+  const sections = SUBTAB_KEYS.businessReadiness.map(k => ({key:k, label:labels[k] || DEFAULT_SUBTAB_LABELS.businessReadiness[k] || k}));
 
   function navigate(target, filter) {
     if (filter) setImpactFilter(filter);
@@ -4901,37 +4903,38 @@ function BusinessReadinessTab({br, setBr, editMode}) {
 
   return (
     <div>
-      <SubTabPills sections={["Summary","Impact Assessment","Go-Live & Approvals","PIV & Prerequisites","Tech Setup","UAT","Defects"]} active={section} onChange={setSection}/>
+      <SubTabPills sections={sections} active={section} onChange={setSection}
+        renaming={renamingTabs} onRename={(k,v)=>updateSubTabLabel("businessReadiness",k,v)}/>
 
-      {section==="Summary" && <BRSummaryTab impact={br.impact} uat={br.uat} defects={br.defects} onNavigate={navigate}/>}
+      {section==="summary" && <BRSummaryTab impact={br.impact} uat={br.uat} defects={br.defects} onNavigate={navigate}/>}
 
-      {section==="Impact Assessment" && (
+      {section==="impact" && (
         <BRImpactTab data={br.impact} setData={setBr.impact} editMode={editMode}
           filterImpacted={impactFilter.impacted} setFilterImpacted={v=>setImpactFilter(f=>({...f,impacted:v}))}
           filterStatus={impactFilter.status} setFilterStatus={v=>setImpactFilter(f=>({...f,status:v}))}/>
       )}
 
-      {section==="Go-Live & Approvals" && (
+      {section==="golive" && (
         <BRChecklistTab data={br.goLive} setData={setBr.goLive} editMode={editMode} grouped csvName="go-live-approvals.csv" itemLabel="Item"
           columns={[{key:"item",label:"Item",multiline:true,width:280},{key:"comments",label:"Comments",multiline:true}]}/>
       )}
 
-      {section==="PIV & Prerequisites" && (
+      {section==="piv" && (
         <BRChecklistTab data={br.piv} setData={setBr.piv} editMode={editMode} csvName="piv-prerequisites.csv" itemLabel="Item"
           columns={[{key:"item",label:"Prerequisite",multiline:true,width:280},{key:"comments",label:"Reference / Comments",multiline:true}]}/>
       )}
 
-      {section==="Tech Setup" && (
+      {section==="techsetup" && (
         <BRChecklistTab data={br.techSetup} setData={setBr.techSetup} editMode={editMode} csvName="tech-setup.csv" itemLabel="Setup Item"
           columns={[{key:"item",label:"Setup Item",multiline:true,width:220},{key:"requestVia",label:"Request Via",multiline:true,width:220},{key:"details",label:"Details",multiline:true}]}/>
       )}
 
-      {section==="UAT" && (
+      {section==="uat" && (
         <BRChecklistTab data={br.uat} setData={setBr.uat} editMode={editMode} csvName="uat.csv" itemLabel="Test Case"
           columns={[{key:"scope",label:"Scope",multiline:true},{key:"owner",label:"Owner",width:140},{key:"comments",label:"Comments",multiline:true,width:220}]}/>
       )}
 
-      {section==="Defects" && <BRDefectsTab data={br.defects} setData={setBr.defects} editMode={editMode}/>}
+      {section==="defects" && <BRDefectsTab data={br.defects} setData={setBr.defects} editMode={editMode}/>}
     </div>
   );
 }
@@ -5130,14 +5133,37 @@ function FAQsTab({data, setData, editMode}) {
 
 
 // ── Sub-tab pill switcher, shared by the grouped top-level tabs below ──────
-function SubTabPills({sections, active, onChange}) {
+const DEFAULT_TAB_LABELS = ["Plan & Timeline","Risks & Mitigations","Communication Plans","Open Questions","FAQs","Technical Spec & Plan","Business Readiness"];
+
+// Stable routing keys for each grouped tab's sub-sections — never shown to
+// the user and never renamed. Only the looked-up label (in subTabLabels) is
+// editable, so renaming a sub-tab can never break which content it shows.
+const SUBTAB_KEYS = {
+  planTimeline: ["timeline","gantt"],
+  comms: ["timeline","journeys"],
+  techSpecPlan: ["register","plan"],
+  businessReadiness: ["summary","impact","golive","piv","techsetup","uat","defects"],
+};
+const DEFAULT_SUBTAB_LABELS = {
+  planTimeline: {timeline:"Timeline", gantt:"Project Plan (Gantt)"},
+  comms: {timeline:"Timeline", journeys:"Customer Journeys"},
+  techSpecPlan: {register:"Requirements Register", plan:"Plan & Architecture"},
+  businessReadiness: {summary:"Summary", impact:"Impact Assessment", golive:"Go-Live & Approvals", piv:"PIV & Prerequisites", techsetup:"Tech Setup", uat:"UAT", defects:"Defects"},
+};
+
+function SubTabPills({sections, active, onChange, renaming, onRename}) {
   return (
     <div style={{display:"flex",gap:6,marginBottom:20,flexWrap:"wrap"}} className="no-print">
-      {sections.map(s => (
-        <button key={s} onClick={()=>onChange(s)}
+      {sections.map(s => renaming ? (
+        <input key={s.key} value={s.label} onChange={e=>onRename(s.key, e.target.value)}
+          style={{padding:"5px 12px",borderRadius:20,fontSize:11,fontWeight:600,fontFamily:"inherit",
+            border:"1px solid #6366f1",background:active===s.key?"#0f172a":"#e2e8f0",
+            color:active===s.key?"#fff":"#475569",width:Math.max(90,s.label.length*7+30)}}/>
+      ) : (
+        <button key={s.key} onClick={()=>onChange(s.key)}
           style={{padding:"5px 14px",borderRadius:20,border:"none",fontSize:11,fontWeight:600,
-            cursor:"pointer",background:active===s?"#0f172a":"#e2e8f0",color:active===s?"#fff":"#475569"}}>
-          {s}
+            cursor:"pointer",background:active===s.key?"#0f172a":"#e2e8f0",color:active===s.key?"#fff":"#475569"}}>
+          {s.label}
         </button>
       ))}
     </div>
@@ -5145,12 +5171,15 @@ function SubTabPills({sections, active, onChange}) {
 }
 
 // ── Tab: Plan & Timeline (Timeline + Project Plan/Gantt) ───────────────────
-function PlanTimelineTab({plan, setPlan, milestones, setMilestones, gantt, setGantt, editMode}) {
-  const [section, setSection] = useState("Timeline");
+function PlanTimelineTab({plan, setPlan, milestones, setMilestones, gantt, setGantt, editMode, subTabLabels, updateSubTabLabel, renamingTabs}) {
+  const [section, setSection] = useState("timeline");
+  const labels = subTabLabels.planTimeline || DEFAULT_SUBTAB_LABELS.planTimeline;
+  const sections = SUBTAB_KEYS.planTimeline.map(k => ({key:k, label:labels[k] || DEFAULT_SUBTAB_LABELS.planTimeline[k] || k}));
   return (
     <div>
-      <SubTabPills sections={["Timeline","Project Plan (Gantt)"]} active={section} onChange={setSection}/>
-      {section==="Timeline"
+      <SubTabPills sections={sections} active={section} onChange={setSection}
+        renaming={renamingTabs} onRename={(k,v)=>updateSubTabLabel("planTimeline",k,v)}/>
+      {section==="timeline"
         ? <PlanTab data={plan} setData={setPlan} milestones={milestones} setMilestones={setMilestones} editMode={editMode}/>
         : <GanttTab data={gantt} setData={setGantt} editMode={editMode}/>}
     </div>
@@ -5158,12 +5187,15 @@ function PlanTimelineTab({plan, setPlan, milestones, setMilestones, gantt, setGa
 }
 
 // ── Tab: Communication Plans (Timeline + Customer Journeys) ────────────────
-function CommsJourneyTab({comms, setComms, cohortDefs, updateCohortDef, addCohortDef, deleteCohortDef, editMode}) {
-  const [section, setSection] = useState("Timeline");
+function CommsJourneyTab({comms, setComms, cohortDefs, updateCohortDef, addCohortDef, deleteCohortDef, editMode, subTabLabels, updateSubTabLabel, renamingTabs}) {
+  const [section, setSection] = useState("timeline");
+  const labels = subTabLabels.comms || DEFAULT_SUBTAB_LABELS.comms;
+  const sections = SUBTAB_KEYS.comms.map(k => ({key:k, label:labels[k] || DEFAULT_SUBTAB_LABELS.comms[k] || k}));
   return (
     <div>
-      <SubTabPills sections={["Timeline","Customer Journeys"]} active={section} onChange={setSection}/>
-      {section==="Timeline"
+      <SubTabPills sections={sections} active={section} onChange={setSection}
+        renaming={renamingTabs} onRename={(k,v)=>updateSubTabLabel("comms",k,v)}/>
+      {section==="timeline"
         ? <CommsTab data={comms} setData={setComms} cohortDefs={cohortDefs} updateCohortDef={updateCohortDef} addCohortDef={addCohortDef} deleteCohortDef={deleteCohortDef} editMode={editMode}/>
         : <JourneyTab commsData={comms} setCommsData={setComms} cohortDefs={cohortDefs} cohortsRef={cohortDefs} editMode={editMode}/>}
     </div>
@@ -5171,12 +5203,15 @@ function CommsJourneyTab({comms, setComms, cohortDefs, updateCohortDef, addCohor
 }
 
 // ── Tab: Technical Spec & Plan (Requirements Register + Plan & Architecture) ─
-function TechSpecPlanTab({techSpecs, setTechSpecs, techPlan, setTechPlan, editMode}) {
-  const [section, setSection] = useState("Requirements Register");
+function TechSpecPlanTab({techSpecs, setTechSpecs, techPlan, setTechPlan, editMode, subTabLabels, updateSubTabLabel, renamingTabs}) {
+  const [section, setSection] = useState("register");
+  const labels = subTabLabels.techSpecPlan || DEFAULT_SUBTAB_LABELS.techSpecPlan;
+  const sections = SUBTAB_KEYS.techSpecPlan.map(k => ({key:k, label:labels[k] || DEFAULT_SUBTAB_LABELS.techSpecPlan[k] || k}));
   return (
     <div>
-      <SubTabPills sections={["Requirements Register","Plan & Architecture"]} active={section} onChange={setSection}/>
-      {section==="Requirements Register"
+      <SubTabPills sections={sections} active={section} onChange={setSection}
+        renaming={renamingTabs} onRename={(k,v)=>updateSubTabLabel("techSpecPlan",k,v)}/>
+      {section==="register"
         ? <TechSpecTab data={techSpecs} setData={setTechSpecs} editMode={editMode}/>
         : <TechPlanTab data={techPlan} setData={setTechPlan} editMode={editMode}/>}
     </div>
@@ -5209,11 +5244,21 @@ function App() {
   const [bannerGoLive, setBannerGoLive] = useState("28 October 2026");
   const [bannerDeact, setBannerDeact] = useState("27 October 2026");
   const [bannerNote, setBannerNote] = useState("Cut-over ");
+  const [tabLabels, setTabLabels] = useState(DEFAULT_TAB_LABELS);
+  const [subTabLabels, setSubTabLabels] = useState(DEFAULT_SUBTAB_LABELS);
+  const [renamingTabs, setRenamingTabs] = useState(false);
   const [showDiscard, setShowDiscard] = useState(false);
   const [editSnapshot, setEditSnapshot] = useState(null);
   const [undoStack, setUndoStack] = useState([]);
   const importRef = useRef();
   const UNDO_LIMIT = 15;
+
+  function updateSubTabLabel(containerId, key, val) {
+    setSubTabLabels(prev => ({...prev, [containerId]: {...prev[containerId], [key]: val}}));
+  }
+  function updateTabLabel(index, val) {
+    setTabLabels(prev => prev.map((t,i) => i===index ? val : t));
+  }
 
   useEffect(() => {
     try {
@@ -5248,6 +5293,8 @@ function App() {
         if (isArr(s.brUat)) setBrUat(s.brUat);
         if (isArr(s.brDefects)) setBrDefects(s.brDefects);
         if (isArr(s.faqs)) setFaqs(s.faqs);
+        if (isArr(s.tabLabels)) setTabLabels(s.tabLabels);
+        if (isObj(s.subTabLabels)) setSubTabLabels(prev => ({...prev, ...s.subTabLabels}));
       }
     } catch(_) {}
     setLoaded(true);
@@ -5256,12 +5303,12 @@ function App() {
   useEffect(() => {
     if (!loaded) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, techSpecs, techPlan, brImpact, brGoLive, brPiv, brTechSetup, brUat, brDefects}));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, techSpecs, techPlan, brImpact, brGoLive, brPiv, brTechSetup, brUat, brDefects, tabLabels, subTabLabels}));
       setSaveStatus("saved");
       const t = setTimeout(() => setSaveStatus("idle"), 1800);
       return () => clearTimeout(t);
     } catch(_) {}
-  }, [plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, techSpecs, techPlan, brImpact, brGoLive, brPiv, brTechSetup, brUat, brDefects, loaded]);
+  }, [plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, techSpecs, techPlan, brImpact, brGoLive, brPiv, brTechSetup, brUat, brDefects, tabLabels, subTabLabels, loaded]);
 
   function pushUndo(snapshot) {
     setUndoStack(prev => {
@@ -5281,8 +5328,9 @@ function App() {
     });
   }
   function enterEditMode() {
-    setEditSnapshot({plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, techSpecs, techPlan, brImpact, brGoLive, brPiv, brTechSetup, brUat, brDefects});
+    setEditSnapshot({plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, techSpecs, techPlan, brImpact, brGoLive, brPiv, brTechSetup, brUat, brDefects, tabLabels, subTabLabels});
     setUndoStack([]);
+    setRenamingTabs(false);
     setEditMode(true);
   }
   function requestExitEdit() {
@@ -5292,6 +5340,7 @@ function App() {
     setShowDiscard(false);
     setEditSnapshot(null);
     setUndoStack([]);
+    setRenamingTabs(false);
     setEditMode(false);
   }
   function discardAndExit() {
@@ -5317,10 +5366,13 @@ function App() {
       if (editSnapshot.brTechSetup) setBrTechSetup(editSnapshot.brTechSetup);
       if (editSnapshot.brUat) setBrUat(editSnapshot.brUat);
       if (editSnapshot.brDefects) setBrDefects(editSnapshot.brDefects);
+      if (editSnapshot.tabLabels) setTabLabels(editSnapshot.tabLabels);
+      if (editSnapshot.subTabLabels) setSubTabLabels(editSnapshot.subTabLabels);
     }
     setShowDiscard(false);
     setEditSnapshot(null);
     setUndoStack([]);
+    setRenamingTabs(false);
     setEditMode(false);
   }
 
@@ -5334,6 +5386,7 @@ function App() {
       plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle,
       cohortDefs, faqs, questions, gantt, techSpecs, techPlan,
       brImpact, brGoLive, brPiv, brTechSetup, brUat, brDefects,
+      tabLabels, subTabLabels,
     };
     const b = new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
     const u = URL.createObjectURL(b);
@@ -5400,6 +5453,8 @@ function App() {
       applyArray("brTechSetup", setBrTechSetup, "Business Readiness — Tech Setup");
       applyArray("brUat", setBrUat, "Business Readiness — UAT");
       applyArray("brDefects", setBrDefects, "Business Readiness — Defects");
+      applyArray("tabLabels", setTabLabels, "Tab titles");
+      applyObject("subTabLabels", v => setSubTabLabels(prev => ({...prev, ...v})), "Sub-tab titles");
 
       if (imported.length === 0 && skipped.length === 0) {
         alert("No recognised dashboard data found in this file.");
@@ -5449,7 +5504,6 @@ function App() {
     setComms(prev => { const next={...prev}; delete next[key]; return next; });
   }
 
-  const TABS = ["Plan & Timeline","Risks & Mitigations","Communication Plans","Open Questions","FAQs","Technical Spec & Plan","Business Readiness"];
   if (!loaded) return <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",color:"#64748b",fontFamily:"'Sora',sans-serif"}}>Loading...</div>;
 
   return (
@@ -5473,6 +5527,13 @@ function App() {
                 ↩ Undo ({undoStack.length})
               </button>
             )}
+            {editMode && (
+              <button onClick={()=>setRenamingTabs(r=>!r)}
+                style={{padding:"6px 11px",borderRadius:8,border:"1px solid #334155",cursor:"pointer",fontWeight:600,fontSize:11,
+                  background:renamingTabs?"#6366f1":"none",color:renamingTabs?"#fff":"#94a3b8",transition:"all 0.15s"}}>
+                {renamingTabs ? "✎ Renaming — Click to Finish" : "✎ Rename Tabs"}
+              </button>
+            )}
             <button onClick={editMode ? requestExitEdit : enterEditMode}
               style={{padding:"6px 14px",borderRadius:8,border:"none",cursor:"pointer",fontWeight:700,fontSize:11,
                 background:editMode?"#f59e0b":"#1e3a5f",color:editMode?"#0f172a":"#e2e8f0",transition:"all 0.15s"}}>
@@ -5481,14 +5542,23 @@ function App() {
           </div>
         </div>
         <div style={{display:"flex",gap:2,padding:"10px 24px 0",overflowX:"auto",overflowY:"hidden"}} className="no-print">
-          {TABS.map((t,i) => (
-            <button key={t} onClick={()=>setTab(i)}
-              style={{padding:"9px 18px",border:"none",cursor:"pointer",fontWeight:tab===i?700:500,fontSize:12,
-                background:tab===i?"#f1f5f9":"transparent",color:tab===i?"#0f172a":"#94a3b8",
-                borderRadius:"8px 8px 0 0",transition:"all 0.15s",whiteSpace:"nowrap",flexShrink:0}}>
-              {t}
-            </button>
-          ))}
+          {DEFAULT_TAB_LABELS.map((defaultLabel,i) => {
+            const label = tabLabels[i] || defaultLabel;
+            return renamingTabs ? (
+              <input key={i} value={label} onChange={e=>updateTabLabel(i,e.target.value)}
+                style={{padding:"9px 12px",fontWeight:tab===i?700:500,fontSize:12,
+                  background:tab===i?"#f1f5f9":"transparent",color:tab===i?"#0f172a":"#94a3b8",
+                  borderRadius:"8px 8px 0 0",border:"1px solid #6366f1",fontFamily:"inherit",
+                  whiteSpace:"nowrap",flexShrink:0,width:Math.max(90,label.length*7+30)}}/>
+            ) : (
+              <button key={i} onClick={()=>setTab(i)}
+                style={{padding:"9px 18px",border:"none",cursor:"pointer",fontWeight:tab===i?700:500,fontSize:12,
+                  background:tab===i?"#f1f5f9":"transparent",color:tab===i?"#0f172a":"#94a3b8",
+                  borderRadius:"8px 8px 0 0",transition:"all 0.15s",whiteSpace:"nowrap",flexShrink:0}}>
+                {label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -5515,16 +5585,20 @@ function App() {
       </div>
 
       <div style={{padding:"20px 24px 48px"}}>
-        {tab===0 && <PlanTimelineTab plan={plan} setPlan={setPlanU} milestones={milestones} setMilestones={setMilestonesU} gantt={gantt} setGantt={setGantt} editMode={editMode}/>}
+        {tab===0 && <PlanTimelineTab plan={plan} setPlan={setPlanU} milestones={milestones} setMilestones={setMilestonesU} gantt={gantt} setGantt={setGantt} editMode={editMode}
+          subTabLabels={subTabLabels} updateSubTabLabel={updateSubTabLabel} renamingTabs={renamingTabs}/>}
         {tab===1 && <RisksTab data={risks} setData={setRisksU} editMode={editMode}/>}
-        {tab===2 && <CommsJourneyTab comms={comms} setComms={setCommsU} cohortDefs={cohortDefs} updateCohortDef={updateCohortDef} addCohortDef={addCohortDef} deleteCohortDef={deleteCohortDef} editMode={editMode}/>}
+        {tab===2 && <CommsJourneyTab comms={comms} setComms={setCommsU} cohortDefs={cohortDefs} updateCohortDef={updateCohortDef} addCohortDef={addCohortDef} deleteCohortDef={deleteCohortDef} editMode={editMode}
+          subTabLabels={subTabLabels} updateSubTabLabel={updateSubTabLabel} renamingTabs={renamingTabs}/>}
         {tab===3 && <QuestionsTab data={questions} setData={setQuestions} editMode={editMode}/>}
         {tab===4 && <FAQsTab data={faqs} setData={setFaqs} editMode={editMode}/>}
-        {tab===5 && <TechSpecPlanTab techSpecs={techSpecs} setTechSpecs={setTechSpecs} techPlan={techPlan} setTechPlan={setTechPlan} editMode={editMode}/>}
+        {tab===5 && <TechSpecPlanTab techSpecs={techSpecs} setTechSpecs={setTechSpecs} techPlan={techPlan} setTechPlan={setTechPlan} editMode={editMode}
+          subTabLabels={subTabLabels} updateSubTabLabel={updateSubTabLabel} renamingTabs={renamingTabs}/>}
         {tab===6 && <BusinessReadinessTab
           br={{impact:brImpact, goLive:brGoLive, piv:brPiv, techSetup:brTechSetup, uat:brUat, defects:brDefects}}
           setBr={{impact:setBrImpact, goLive:setBrGoLive, piv:setBrPiv, techSetup:setBrTechSetup, uat:setBrUat, defects:setBrDefects}}
-          editMode={editMode}/>}
+          editMode={editMode}
+          subTabLabels={subTabLabels} updateSubTabLabel={updateSubTabLabel} renamingTabs={renamingTabs}/>}
       </div>
 
       {showDiscard && (
