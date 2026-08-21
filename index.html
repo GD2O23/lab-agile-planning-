@@ -1548,64 +1548,6 @@ const GANTT_WS_COLORS = {
   "Digital Wallets":"#0f766e",
 };
 
-// ── Project Plan Template (generic starter data, no client-specific rows) ──
-const TEMPLATE_WS_COLORS = {
-  "Workstream A":"#1d4ed8",
-  "Workstream B":"#7c3aed",
-  "Workstream C":"#0891b2",
-  "Workstream D":"#b45309",
-};
-const DEFAULT_GANTT_TEMPLATE = [
-  {
-    id: "t1",
-    milestone: "Phase 1 — Discovery",
-    task: "Define scope and success criteria",
-    workstream: "Workstream A",
-    start: "",
-    finish: "",
-    owner: "",
-    pct: 0,
-    status: "Planned",
-    deps: []
-  },
-  {
-    id: "t2",
-    milestone: "Phase 1 — Discovery",
-    task: "Stakeholder kick-off",
-    workstream: "Workstream A",
-    start: "",
-    finish: "",
-    owner: "",
-    pct: 0,
-    status: "Planned",
-    deps: ["t1"]
-  },
-  {
-    id: "t3",
-    milestone: "Phase 2 — Build",
-    task: "Example build task",
-    workstream: "Workstream B",
-    start: "",
-    finish: "",
-    owner: "",
-    pct: 0,
-    status: "Planned",
-    deps: ["t2"]
-  },
-  {
-    id: "t4",
-    milestone: "Phase 3 — Test & Go-Live",
-    task: "Example test task",
-    workstream: "Workstream C",
-    start: "",
-    finish: "",
-    owner: "",
-    pct: 0,
-    status: "Planned",
-    deps: ["t3"]
-  }
-];
-
 // ── Technical Spec / Requirements register ──────────────────────────────────
 const TECHSPEC_CAT_C = {
   "API":          "#1d4ed8",
@@ -2774,7 +2716,8 @@ function parseDate(str) {
   return new Date(yr, mon, day);
 }
 
-function DepPanel({task, allTasks, onClose, onSave, wsColors=GANTT_WS_COLORS}) {
+function DepPanel({task, allTasks, onClose, onSave}) {
+  const wsColors = GANTT_WS_COLORS;
   const [deps, setDeps] = useState([...(task.deps||[])]);
   const available = allTasks.filter(t => t.id !== task.id && !deps.includes(t.id));
   const depTasks = allTasks.filter(t => deps.includes(t.id));
@@ -2901,8 +2844,10 @@ function DepPanel({task, allTasks, onClose, onSave, wsColors=GANTT_WS_COLORS}) {
   );
 }
 
-function GanttTab({data, setData, editMode, wsColors=GANTT_WS_COLORS,
-  footerNote="Sourced from OPP-04569 GSBB+ and Integrated Project Plan 01/06/26", csvName="project-plan.csv"}) {
+function GanttTab({data, setData, editMode}) {
+  const wsColors = GANTT_WS_COLORS;
+  const footerNote = "Sourced from OPP-04569 GSBB+ and Integrated Project Plan 01/06/26";
+  const csvName = "project-plan.csv";
   const [filterWS, setFilterWS] = useState("All");
   const [filterMS, setFilterMS] = useState("All");
   const [viewMode, setViewMode] = useState("gantt");
@@ -3959,6 +3904,60 @@ function FAQsTab({data, setData, editMode}) {
 
 
 
+// ── Sub-tab pill switcher, shared by the grouped top-level tabs below ──────
+function SubTabPills({sections, active, onChange}) {
+  return (
+    <div style={{display:"flex",gap:6,marginBottom:20,flexWrap:"wrap"}} className="no-print">
+      {sections.map(s => (
+        <button key={s} onClick={()=>onChange(s)}
+          style={{padding:"5px 14px",borderRadius:20,border:"none",fontSize:11,fontWeight:600,
+            cursor:"pointer",background:active===s?"#0f172a":"#e2e8f0",color:active===s?"#fff":"#475569"}}>
+          {s}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ── Tab: Plan & Timeline (Timeline + Project Plan/Gantt) ───────────────────
+function PlanTimelineTab({plan, setPlan, milestones, setMilestones, gantt, setGantt, editMode}) {
+  const [section, setSection] = useState("Timeline");
+  return (
+    <div>
+      <SubTabPills sections={["Timeline","Project Plan (Gantt)"]} active={section} onChange={setSection}/>
+      {section==="Timeline"
+        ? <PlanTab data={plan} setData={setPlan} milestones={milestones} setMilestones={setMilestones} editMode={editMode}/>
+        : <GanttTab data={gantt} setData={setGantt} editMode={editMode}/>}
+    </div>
+  );
+}
+
+// ── Tab: Communication Plans (Timeline + Customer Journeys) ────────────────
+function CommsJourneyTab({comms, setComms, cohortDefs, updateCohortDef, addCohortDef, deleteCohortDef, editMode}) {
+  const [section, setSection] = useState("Timeline");
+  return (
+    <div>
+      <SubTabPills sections={["Timeline","Customer Journeys"]} active={section} onChange={setSection}/>
+      {section==="Timeline"
+        ? <CommsTab data={comms} setData={setComms} cohortDefs={cohortDefs} updateCohortDef={updateCohortDef} addCohortDef={addCohortDef} deleteCohortDef={deleteCohortDef} editMode={editMode}/>
+        : <JourneyTab commsData={comms} setCommsData={setComms} cohortDefs={cohortDefs} cohortsRef={cohortDefs} editMode={editMode}/>}
+    </div>
+  );
+}
+
+// ── Tab: Technical Spec & Plan (Requirements Register + Plan & Architecture) ─
+function TechSpecPlanTab({techSpecs, setTechSpecs, techPlan, setTechPlan, editMode}) {
+  const [section, setSection] = useState("Requirements Register");
+  return (
+    <div>
+      <SubTabPills sections={["Requirements Register","Plan & Architecture"]} active={section} onChange={setSection}/>
+      {section==="Requirements Register"
+        ? <TechSpecTab data={techSpecs} setData={setTechSpecs} editMode={editMode}/>
+        : <TechPlanTab data={techPlan} setData={setTechPlan} editMode={editMode}/>}
+    </div>
+  );
+}
+
 function App() {
   const [tab, setTab] = useState(0);
   const [editMode, setEditMode] = useState(false);
@@ -3970,7 +3969,6 @@ function App() {
   const [loaded, setLoaded] = useState(false);
   const [questions, setQuestions] = useState(DEFAULT_QUESTIONS);
   const [gantt, setGantt] = useState(DEFAULT_GANTT);
-  const [ganttTemplate, setGanttTemplate] = useState(DEFAULT_GANTT_TEMPLATE);
   const [techSpecs, setTechSpecs] = useState(DEFAULT_TECH_SPECS);
   const [techPlan, setTechPlan] = useState(DEFAULT_TECH_PLAN);
   const [faqs, setFaqs] = useState(DEFAULT_FAQS);
@@ -4010,7 +4008,6 @@ function App() {
         if (isStr(s.bannerNote)) setBannerNote(s.bannerNote);
         if (isArr(s.questions)) setQuestions(s.questions);
         if (isArr(s.gantt)) setGantt(s.gantt);
-        if (isArr(s.ganttTemplate)) setGanttTemplate(s.ganttTemplate);
         if (isArr(s.techSpecs)) setTechSpecs(s.techSpecs);
         if (isArr(s.techPlan)) setTechPlan(s.techPlan);
         if (isArr(s.faqs)) setFaqs(s.faqs);
@@ -4022,12 +4019,12 @@ function App() {
   useEffect(() => {
     if (!loaded) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, ganttTemplate, techSpecs, techPlan}));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, techSpecs, techPlan}));
       setSaveStatus("saved");
       const t = setTimeout(() => setSaveStatus("idle"), 1800);
       return () => clearTimeout(t);
     } catch(_) {}
-  }, [plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, ganttTemplate, techSpecs, techPlan, loaded]);
+  }, [plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, techSpecs, techPlan, loaded]);
 
   function pushUndo(snapshot) {
     setUndoStack(prev => {
@@ -4047,7 +4044,7 @@ function App() {
     });
   }
   function enterEditMode() {
-    setEditSnapshot({plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, ganttTemplate, techSpecs, techPlan});
+    setEditSnapshot({plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, techSpecs, techPlan});
     setUndoStack([]);
     setEditMode(true);
   }
@@ -4075,7 +4072,6 @@ function App() {
       if (editSnapshot.faqs) setFaqs(editSnapshot.faqs);
       if (editSnapshot.questions) setQuestions(editSnapshot.questions);
       if (editSnapshot.gantt) setGantt(editSnapshot.gantt);
-      if (editSnapshot.ganttTemplate) setGanttTemplate(editSnapshot.ganttTemplate);
       if (editSnapshot.techSpecs) setTechSpecs(editSnapshot.techSpecs);
       if (editSnapshot.techPlan) setTechPlan(editSnapshot.techPlan);
     }
@@ -4093,7 +4089,7 @@ function App() {
         exportedAt: new Date().toISOString(),
       },
       plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle,
-      cohortDefs, faqs, questions, gantt, ganttTemplate, techSpecs, techPlan,
+      cohortDefs, faqs, questions, gantt, techSpecs, techPlan,
     };
     const b = new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
     const u = URL.createObjectURL(b);
@@ -4152,7 +4148,6 @@ function App() {
       applyArray("faqs", setFaqs, "FAQs");
       applyArray("questions", setQuestions, "Open Questions");
       applyArray("gantt", setGantt, "Project Plan");
-      applyArray("ganttTemplate", setGanttTemplate, "Project Plan Template");
       applyArray("techSpecs", setTechSpecs, "Technical Spec");
       applyArray("techPlan", setTechPlan, "Tech Requirements & Plan");
 
@@ -4204,7 +4199,7 @@ function App() {
     setComms(prev => { const next={...prev}; delete next[key]; return next; });
   }
 
-  const TABS = ["Plan & Timeline","Risks & Mitigations","Communication Plans","Customer Journeys","Open Questions","Project Plan","FAQs","Project Plan Template","Technical Spec","Tech Requirements & Plan"];
+  const TABS = ["Plan & Timeline","Risks & Mitigations","Communication Plans","Open Questions","FAQs","Technical Spec & Plan"];
   if (!loaded) return <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",color:"#64748b",fontFamily:"'Sora',sans-serif"}}>Loading...</div>;
 
   return (
@@ -4270,19 +4265,12 @@ function App() {
       </div>
 
       <div style={{padding:"20px 24px 48px"}}>
-        {tab===0 && <PlanTab data={plan} setData={setPlanU} milestones={milestones} setMilestones={setMilestonesU} editMode={editMode}/>}
+        {tab===0 && <PlanTimelineTab plan={plan} setPlan={setPlanU} milestones={milestones} setMilestones={setMilestonesU} gantt={gantt} setGantt={setGantt} editMode={editMode}/>}
         {tab===1 && <RisksTab data={risks} setData={setRisksU} editMode={editMode}/>}
-        {tab===2 && <CommsTab data={comms} setData={setCommsU} cohortDefs={cohortDefs} updateCohortDef={updateCohortDef} addCohortDef={addCohortDef} deleteCohortDef={deleteCohortDef} editMode={editMode}/>}
-        {tab===3 && <JourneyTab commsData={comms} setCommsData={setCommsU} cohortDefs={cohortDefs} cohortsRef={cohortDefs} editMode={editMode}/>}
-        {tab===4 && <QuestionsTab data={questions} setData={setQuestions} editMode={editMode}/>}
-        {tab===5 && <GanttTab data={gantt} setData={setGantt} editMode={editMode}/>}
-        {tab===6 && <FAQsTab data={faqs} setData={setFaqs} editMode={editMode}/>}
-        {tab===7 && <GanttTab data={ganttTemplate} setData={setGanttTemplate} editMode={editMode}
-          wsColors={TEMPLATE_WS_COLORS}
-          footerNote="Blank project plan template — add your own milestones and tasks, or upload an Excel plan to get started"
-          csvName="project-plan-template.csv"/>}
-        {tab===8 && <TechSpecTab data={techSpecs} setData={setTechSpecs} editMode={editMode}/>}
-        {tab===9 && <TechPlanTab data={techPlan} setData={setTechPlan} editMode={editMode}/>}
+        {tab===2 && <CommsJourneyTab comms={comms} setComms={setCommsU} cohortDefs={cohortDefs} updateCohortDef={updateCohortDef} addCohortDef={addCohortDef} deleteCohortDef={deleteCohortDef} editMode={editMode}/>}
+        {tab===3 && <QuestionsTab data={questions} setData={setQuestions} editMode={editMode}/>}
+        {tab===4 && <FAQsTab data={faqs} setData={setFaqs} editMode={editMode}/>}
+        {tab===5 && <TechSpecPlanTab techSpecs={techSpecs} setTechSpecs={setTechSpecs} techPlan={techPlan} setTechPlan={setTechPlan} editMode={editMode}/>}
       </div>
 
       {showDiscard && (
