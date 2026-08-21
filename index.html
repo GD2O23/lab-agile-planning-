@@ -2491,6 +2491,23 @@ function iconForValue(value, customIcon) {
   return found ? found.icon : "";
 }
 
+function getIcon(row) {
+  const chosen = iconForValue(row && row.icon, row && row.customIcon);
+  if (chosen) return chosen;
+  const channel = row ? row.channel : "";
+  if (!channel) return "\uD83D\uDCCB";
+  const ch = channel.toLowerCase();
+  if (ch.includes("email") && ch.includes("app")) return "\uD83D\uDCF1 \u2709";
+  if (ch.includes("app") && ch.includes("sms")) return "\uD83D\uDCF1\uD83D\uDCAC";
+  if (ch.includes("email") && ch.includes("sms")) return "\u2709 \uD83D\uDCAC";
+  if (ch.includes("email")) return "\u2709";
+  if (ch.includes("sms")) return "\uD83D\uDCAC";
+  if (ch.includes("mail") && !ch.includes("email")) return "\uD83D\uDCEC";
+  if (ch.includes("app")) return "\uD83D\uDCF1";
+  if (ch.includes("card") || ch.includes("plastic")) return "\uD83D\uDCB3";
+  return "\uD83D\uDCCB";
+}
+
 function IconSelect({value, customIcon, onChange, onCustomChange}) {
   return (
     <div style={{display:"flex",gap:6,alignItems:"center",minWidth:0}}>
@@ -3074,23 +3091,6 @@ function JourneyTab({commsData, setCommsData, cohortDefs, cohortsRef, editMode})
       [rows[idx], rows[target]] = [rows[target], rows[idx]];
       return {...prev,[cohortKey]:rows};
     });
-  }
-
-  function getIcon(row) {
-    const chosen = iconForValue(row && row.icon, row && row.customIcon);
-    if (chosen) return chosen;
-    const channel = row ? row.channel : "";
-    if (!channel) return "\uD83D\uDCCB";
-    const ch = channel.toLowerCase();
-    if (ch.includes("email") && ch.includes("app")) return "\uD83D\uDCF1 \u2709";
-    if (ch.includes("app") && ch.includes("sms")) return "\uD83D\uDCF1\uD83D\uDCAC";
-    if (ch.includes("email") && ch.includes("sms")) return "\u2709 \uD83D\uDCAC";
-    if (ch.includes("email")) return "\u2709";
-    if (ch.includes("sms")) return "\uD83D\uDCAC";
-    if (ch.includes("mail") && !ch.includes("email")) return "\uD83D\uDCEC";
-    if (ch.includes("app")) return "\uD83D\uDCF1";
-    if (ch.includes("card") || ch.includes("plastic")) return "\uD83D\uDCB3";
-    return "\uD83D\uDCCB";
   }
 
   function stagePill(stage) {
@@ -5218,6 +5218,241 @@ function TechSpecPlanTab({techSpecs, setTechSpecs, techPlan, setTechPlan, editMo
   );
 }
 
+// ── Presentation View: a computed, print-friendly executive summary ────────
+// Not a tab — reached via a header button. Every number here is derived
+// from the same live state the rest of the app reads/writes, never
+// hand-maintained.
+const PRES_JOURNEY_COHORTS = ["c1","c2"]; // the only two cohorts with a real, distinct journey today
+
+function daysUntil(dateStr) {
+  // bannerGoLive uses full month names ("28 October 2026") while parseDate
+  // expects the 3-letter abbreviations milestones/gantt dates use ("28 Oct
+  // 2026") — normalize the month token to 3 letters so both work here.
+  if (!dateStr) return null;
+  const parts = dateStr.trim().split(" ");
+  if (parts.length < 3) return null;
+  const normalized = [parts[0], parts[1].slice(0,3), parts[2]].join(" ");
+  const d = parseDate(normalized);
+  if (!d) return null;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((d - today) / 86400000);
+}
+
+function PresentationView({risks, questions, milestones, bannerGoLive, comms, cohortDefs, brImpact}) {
+  const today = new Date();
+  const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const daysToGoLive = daysUntil(bannerGoLive);
+
+  const highRisks = risks.filter(r => r.level === "high");
+  const highRisksOpen = highRisks.filter(r => r.status !== "Complete");
+  const openQuestions = questions.filter(q => q.status === "open");
+
+  const readinessTotal = brImpact.length;
+  const readinessComplete = brImpact.filter(r => r.status === "Complete").length;
+  const readinessPct = readinessTotal ? Math.round((readinessComplete/readinessTotal)*100) : 0;
+
+  // Simple, adjustable RAG heuristic — honest by default rather than tuned to look good.
+  let rag = {label:"On Track", bg:"#166534", chip:"#dcfce7", dot:"#22c55e"};
+  if (highRisksOpen.length >= 3 || (daysToGoLive!==null && daysToGoLive<=14 && readinessPct<50)) {
+    rag = {label:"At Risk", bg:"#7f1d1d", chip:"#fee2e2", dot:"#ef4444"};
+  } else if (highRisksOpen.length >= 1 || openQuestions.length >= 5) {
+    rag = {label:"On Track — Watch Items", bg:"#78350f", chip:"#fef3c7", dot:"#f59e0b"};
+  }
+
+  const topRisks = [...highRisksOpen, ...highRisks.filter(r=>r.status==="Complete")].slice(0,3);
+  const topQuestions = openQuestions.slice(0,3);
+
+  const statusColor = {"To Do":"#94a3b8","In Progress":"#3b82f6","Complete":"#22c55e","Not Applicable":"#cbd5e1"};
+  const byStatus = brImpact.reduce((acc,r)=>{ acc[r.status]=(acc[r.status]||0)+1; return acc; }, {});
+
+  const thS = {fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:0.6,color:"#94a3b8",textAlign:"center"};
+
+  return (
+    <div style={{background:"#f1f5f9",fontFamily:"'Sora',sans-serif"}}>
+      <style>{`@media print { .pv-page{page-break-after:always} .pv-page:last-child{page-break-after:auto} }`}</style>
+
+      {/* ═══ Page 1: Program Status ═══ */}
+      <div className="pv-page">
+        <div style={{background:"#0f172a",padding:"36px 48px 32px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:20}}>
+            <div>
+              <div style={{fontSize:10,fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:"#64748b",marginBottom:6}}>GSB</div>
+              <div style={{fontSize:30,fontWeight:800,color:"#f1f5f9",letterSpacing:-0.5,marginBottom:6}}>Mastercard → Visa Migration</div>
+              <div style={{fontSize:13,color:"#94a3b8"}}>As of {today.toLocaleDateString("en-AU",{day:"numeric",month:"long",year:"numeric"})} · Auto-generated from live project data</div>
+            </div>
+            <div style={{textAlign:"right"}}>
+              <div style={{display:"inline-flex",alignItems:"center",gap:8,background:rag.bg,border:`1px solid ${rag.dot}`,borderRadius:24,padding:"8px 20px"}}>
+                <div style={{width:9,height:9,borderRadius:"50%",background:rag.dot}}/>
+                <span style={{fontSize:13,fontWeight:800,color:rag.chip,letterSpacing:1,textTransform:"uppercase"}}>{rag.label}</span>
+              </div>
+              <div style={{fontSize:11,color:"#64748b",marginTop:8}}>Go-live: {bannerGoLive}</div>
+            </div>
+          </div>
+          <div style={{fontSize:10,color:"#475569",marginTop:22,letterSpacing:0.5}}>1 — PROGRAM STATUS</div>
+        </div>
+
+        <div style={{padding:"36px 48px"}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:16,marginBottom:32}}>
+            {[
+              {val: daysToGoLive===null?"—":daysToGoLive, label:"Days to Go-Live", color:"#0f172a"},
+              {val: readinessPct+"%", label:"Business Readiness", color:"#0891b2"},
+              {val: highRisksOpen.length, label:"High-Severity Risks Open", color:"#9f1239"},
+              {val: openQuestions.length, label:"Decisions Needed", color:"#92400e"},
+            ].map(s => (
+              <div key={s.label} style={{background:"#fff",borderRadius:14,padding:"22px 24px",border:"1px solid #e2e8f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
+                <div style={{fontSize:38,fontWeight:800,color:s.color,lineHeight:1,marginBottom:8}}>{s.val}</div>
+                <div style={{fontSize:12,color:"#64748b",fontWeight:700,textTransform:"uppercase",letterSpacing:0.8}}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{background:"#fff",borderRadius:14,border:"1px solid #e2e8f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)",padding:"28px 32px",marginBottom:24}}>
+            <div style={{fontSize:11,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"#94a3b8",marginBottom:22}}>Key Milestones</div>
+            <div style={{position:"relative",display:"flex",justifyContent:"space-between"}}>
+              <div style={{position:"absolute",top:7,left:20,right:20,height:2,background:"#e2e8f0"}}/>
+              {milestones.map(m => {
+                const d = parseDate(m.date);
+                const isPast = d && d < todayMid;
+                const isNext = d && !isPast && milestones.filter(mm=>{const dd=parseDate(mm.date); return dd && dd>=todayMid;}).sort((a,b)=>parseDate(a.date)-parseDate(b.date))[0]?.id===m.id;
+                return (
+                  <div key={m.id} style={{position:"relative",display:"flex",flexDirection:"column",alignItems:"center",flex:1}}>
+                    <div style={{width:isPast||isNext?16:14,height:isPast||isNext?16:14,borderRadius:"50%",
+                      background:isPast?m.color:"#fff",border:`${isPast?3:2}px solid ${m.color}`,
+                      boxShadow:isPast?`0 0 0 2px ${m.color}`:"none",zIndex:1}}/>
+                    <div style={{fontSize:12,fontWeight:isPast||isNext?700:600,color:isPast||isNext?"#0f172a":"#475569",marginTop:12,textAlign:"center"}}>{m.label}</div>
+                    <div style={{fontSize:10,color:"#94a3b8",marginTop:2}}>{m.date}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div style={{display:"grid",gridTemplateColumns:"1.1fr 0.9fr",gap:20}}>
+            <div style={{background:"#fff",borderRadius:14,border:"1px solid #e2e8f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)",padding:"24px 26px"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:16}}>
+                <div style={{fontSize:11,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"#94a3b8"}}>Needs Attention — Top Risks</div>
+                <div style={{fontSize:11,color:"#94a3b8"}}>{highRisks.length} high · {risks.filter(r=>r.level==="medium").length} medium · {risks.filter(r=>r.level==="low").length} low</div>
+              </div>
+              {topRisks.length===0 ? (
+                <div style={{fontSize:12,color:"#94a3b8",fontStyle:"italic"}}>No high-severity risks recorded.</div>
+              ) : (
+                <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                  {topRisks.map(r => (
+                    <div key={r.id} style={{background:"#fff1f2",border:"1px solid #fda4af",borderRadius:10,padding:"14px 16px"}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
+                        <div style={{fontSize:13,fontWeight:700,color:"#0f172a",lineHeight:1.4}}>{r.risk}</div>
+                        <span style={{fontSize:9,fontWeight:800,padding:"3px 8px",borderRadius:4,background:"#ffe4e6",color:"#9f1239",textTransform:"uppercase",letterSpacing:0.6,whiteSpace:"nowrap"}}>{r.status}</span>
+                      </div>
+                      <div style={{fontSize:12,color:"#64748b",marginTop:6}}>Mitigation: {r.mitigation || "—"} · Owner: {r.owner || "Unassigned"}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div style={{display:"flex",flexDirection:"column",gap:20}}>
+              <div style={{background:"#fff",borderRadius:14,border:"1px solid #e2e8f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)",padding:"24px 26px"}}>
+                <div style={{fontSize:11,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"#94a3b8",marginBottom:14}}>Business Readiness</div>
+                <div style={{display:"flex",height:12,borderRadius:6,overflow:"hidden",marginBottom:12}}>
+                  {Object.entries(byStatus).map(([k,v]) => v>0 && <div key={k} style={{flex:v,background:statusColor[k]||"#cbd5e1"}}/>)}
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                  {Object.entries(byStatus).map(([k,v]) => (
+                    <div key={k} style={{display:"flex",justifyContent:"space-between",fontSize:12}}>
+                      <span style={{color:"#334155",fontWeight:600}}>{k}</span><span style={{color:"#94a3b8"}}>{v}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{background:"#fff",borderRadius:14,border:"1px solid #e2e8f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)",padding:"24px 26px"}}>
+                <div style={{fontSize:11,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"#94a3b8",marginBottom:14}}>Decisions Needed From Leadership</div>
+                {topQuestions.length===0 ? (
+                  <div style={{fontSize:12,color:"#94a3b8",fontStyle:"italic"}}>No open questions.</div>
+                ) : (
+                  <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                    {topQuestions.map((q,i) => (
+                      <div key={q.id} style={{fontSize:12,color:"#334155",lineHeight:1.5,paddingBottom:10,
+                        borderBottom:i<topQuestions.length-1?"1px solid #f1f5f9":"none"}}>
+                        {(q.text||"").split("\n")[0].slice(0,140)}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div style={{fontSize:11,color:"#94a3b8",textAlign:"center",marginTop:24}}>Generated from the live project dashboard — not a manually maintained document</div>
+        </div>
+      </div>
+
+      {/* ═══ Page 2: Customer Journeys ═══ */}
+      <div className="pv-page">
+        <div style={{background:"#0f172a",padding:"28px 48px 24px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",flexWrap:"wrap",gap:16}}>
+            <div>
+              <div style={{fontSize:10,fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:"#64748b",marginBottom:6}}>GSB</div>
+              <div style={{fontSize:26,fontWeight:800,color:"#f1f5f9",letterSpacing:-0.5}}>Customer Journeys</div>
+            </div>
+            <div style={{textAlign:"right",fontSize:12,color:"#94a3b8"}}>Mastercard → Visa Migration</div>
+          </div>
+          <div style={{fontSize:10,color:"#475569",marginTop:18,letterSpacing:0.5}}>2 — CUSTOMER JOURNEYS</div>
+        </div>
+
+        <div style={{padding:"36px 48px"}}>
+          <div style={{fontSize:13,color:"#64748b",lineHeight:1.5,maxWidth:760,marginBottom:24}}>
+            Every touchpoint sent to each cohort, in sequence. {PRES_JOURNEY_COHORTS.length} of {cohortDefs.length} defined cohorts have a distinct journey today — the rest are not yet populated.
+          </div>
+
+          {PRES_JOURNEY_COHORTS.map(key => {
+            const def = cohortDefs.find(c => c.key===key);
+            const rows = comms[key] || [];
+            if (!def) return null;
+            return (
+              <div key={key} style={{background:"#fff",borderRadius:14,border:"1px solid #e2e8f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)",padding:"20px 24px",marginBottom:16}}>
+                <div style={{marginBottom:16}}>
+                  <div style={{fontSize:11,fontWeight:700,color:def.color,textTransform:"uppercase",letterSpacing:0.6,marginBottom:3}}>{def.label}</div>
+                  <div style={{fontSize:14,fontWeight:700,color:"#0f172a"}}>{def.title}</div>
+                </div>
+                {rows.length===0 ? (
+                  <div style={{fontSize:12,color:"#94a3b8",fontStyle:"italic"}}>No touchpoints defined yet.</div>
+                ) : (
+                  <div style={{overflowX:"auto"}}>
+                    <div style={{display:"flex",gap:4,minWidth:rows.length*118}}>
+                      {rows.map((r,i) => (
+                        <div key={r.id||i} style={{display:"flex",flexDirection:"column",alignItems:"center",width:114,flexShrink:0}}>
+                          <div style={{width:38,height:38,borderRadius:"50%",background:"#fff",border:`2px solid ${STREAM_C[r.stream]||def.color}`,
+                            display:"flex",alignItems:"center",justifyContent:"center",fontSize:15}}>{getIcon(r)}</div>
+                          <div style={{fontSize:10,color:"#64748b",marginTop:6}}>{r.date||"—"}</div>
+                          <div style={{fontSize:10,fontWeight:700,color:"#0f172a",marginTop:2,textAlign:"center"}}>{r.stage}</div>
+                          <div style={{fontSize:9,color:"#94a3b8",textAlign:"center",marginTop:2,lineHeight:1.3}}>{(r.communication||"").slice(0,50)}{(r.communication||"").length>50?"…":""}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          <div style={{background:"#fff",borderRadius:14,border:"1px solid #e2e8f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)",padding:"20px 24px"}}>
+            <div style={{fontSize:11,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"#94a3b8",marginBottom:14}}>Channels Used</div>
+            <div style={{display:"flex",gap:28,flexWrap:"wrap"}}>
+              <div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:16}}>✉</span><span style={{fontSize:12,color:"#334155"}}>Email & app banner</span></div>
+              <div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:16}}>📬</span><span style={{fontSize:12,color:"#334155"}}>Physical mail (card & carrier letter)</span></div>
+              <div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:16}}>📱</span><span style={{fontSize:12,color:"#334155"}}>App push notification</span></div>
+            </div>
+          </div>
+
+          <div style={{fontSize:11,color:"#94a3b8",textAlign:"center",marginTop:24}}>Generated from the live project dashboard — not a manually maintained document</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [tab, setTab] = useState(0);
   const [editMode, setEditMode] = useState(false);
@@ -5247,6 +5482,7 @@ function App() {
   const [tabLabels, setTabLabels] = useState(DEFAULT_TAB_LABELS);
   const [subTabLabels, setSubTabLabels] = useState(DEFAULT_SUBTAB_LABELS);
   const [renamingTabs, setRenamingTabs] = useState(false);
+  const [presentationView, setPresentationView] = useState(false);
   const [showDiscard, setShowDiscard] = useState(false);
   const [editSnapshot, setEditSnapshot] = useState(null);
   const [undoStack, setUndoStack] = useState([]);
@@ -5506,6 +5742,25 @@ function App() {
 
   if (!loaded) return <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",color:"#64748b",fontFamily:"'Sora',sans-serif"}}>Loading...</div>;
 
+  if (presentationView) {
+    return (
+      <div style={{minHeight:"100vh",background:"#f1f5f9",fontFamily:"'Sora',sans-serif"}}>
+        <div style={{background:"#0f172a",padding:"10px 24px",display:"flex",gap:8,position:"sticky",top:0,zIndex:50}} className="no-print">
+          <button onClick={()=>setPresentationView(false)}
+            style={{padding:"6px 14px",borderRadius:8,border:"1px solid #334155",background:"none",color:"#e2e8f0",fontSize:11,cursor:"pointer",fontWeight:600}}>
+            ← Back to Dashboard
+          </button>
+          <button onClick={() => window.print()}
+            style={{padding:"6px 14px",borderRadius:8,border:"1px solid #334155",background:"none",color:"#94a3b8",fontSize:11,cursor:"pointer",fontWeight:600}}>
+            Print / PDF
+          </button>
+        </div>
+        <PresentationView risks={risks} questions={questions} milestones={milestones} bannerGoLive={bannerGoLive}
+          comms={comms} cohortDefs={cohortDefs} brImpact={brImpact}/>
+      </div>
+    );
+  }
+
   return (
     <div style={{minHeight:"100vh",background:"#f1f5f9",fontFamily:"'Sora',sans-serif"}}>
       <div style={{background:"#0f172a",position:"sticky",top:0,zIndex:50,boxShadow:"0 2px 12px rgba(0,0,0,0.2)"}} className="no-print">
@@ -5521,6 +5776,7 @@ function App() {
             </label>
             <button onClick={exportJSON} style={{padding:"6px 11px",borderRadius:8,border:"1px solid #334155",background:"none",color:"#94a3b8",fontSize:11,cursor:"pointer",fontWeight:600}}>Save Dashboard</button>
             <button onClick={() => window.print()} style={{padding:"6px 11px",borderRadius:8,border:"1px solid #334155",background:"none",color:"#94a3b8",fontSize:11,cursor:"pointer",fontWeight:600}}>Print / PDF</button>
+            <button onClick={() => setPresentationView(true)} style={{padding:"6px 11px",borderRadius:8,border:"1px solid #334155",background:"none",color:"#94a3b8",fontSize:11,cursor:"pointer",fontWeight:600}}>Presentation View</button>
             {editMode && undoStack.length > 0 && (
               <button onClick={undoLast}
                 style={{padding:"6px 11px",borderRadius:8,border:"1px solid #334155",background:"none",color:"#94a3b8",fontSize:11,cursor:"pointer",fontWeight:600}}>
