@@ -41,6 +41,12 @@ const STATUS_C = {
   "Planned":     {bg:"#f1f5f9",text:"#475569"},
   "Open":        {bg:"#ffe4e6",text:"#9f1239"},
   "Under Review":{bg:"#fef3c7",text:"#92400e"},
+  "To Do":       {bg:"#f1f5f9",text:"#475569"},
+  "Not Applicable":{bg:"#f1f5f9",text:"#94a3b8"},
+  "Validated":   {bg:"#dcfce7",text:"#166534"},
+  "Closed":      {bg:"#dcfce7",text:"#166534"},
+  "Monitor":     {bg:"#fef3c7",text:"#92400e"},
+  "Pending Retest":{bg:"#dbeafe",text:"#1e40af"},
 };
 const STREAM_C = {
   "Card Art":"#7c3aed","Customer Comms":"#0891b2","App Prompt":"#0284c7",
@@ -1622,6 +1628,805 @@ const DEFAULT_TECH_PLAN = [
   {id:"tpl11", title:"Rollback & Contingency Plan",                content:""},
   {id:"tpl12", title:"Assumptions, Constraints & Open Technical Risks", content:""},
 ];
+
+// ── Business Readiness (sourced from the Visa Migration Business Readiness workbook) ──
+const DEFAULT_BR_IMPACT = [
+  {
+    "id": "ia1",
+    "itemNo": "1",
+    "item": "Scope Acceptance",
+    "impacted": "Yes",
+    "description": "CXNPL Scope Acceptance",
+    "evidenceRequired": "YES\\*\\* Contractual Requirement",
+    "linkToArtifact": "<Approach Document> - Visa Migration Questions | https://constantinople.atlassian.net/wiki/pages/resumedraft.action?draftId=2469068836 - CXNPL Responses — Visa Migration Questions | https://constantinople.atlassian.net/wiki/x/xABal - FW Visa Migration - Parallel Scheme Processing\\_CXNPL Clarification.msg | https://creditunionaust.sharepoint.com/:u:/r/sites/SMEStrategy/Shared%20Documents/General/4.%20Planning%20%26%20Execution/SBB%20-%20Feature%20Updates/2026%20-%20Feature%20Updates/Visa%20Migration/FW%20Visa%20Migration%20-%20Parallel%20Scheme%20Processing_CXNPL%20Clarification.msg?csf=1&web=1&e=JBe7i4 - Visa Migration Customer Impact | https://constantinople.atlassian.net/wiki/x/F4Cklg - Proposed Technical customer journey (MYOB & Business+) | https://constantinople.atlassian.net/wiki/x/q4DYlQ - Dates Required - Delivery Items- Visa Migration | https://constantinople.atlassian.net/wiki/x/JgDulw - Approval to proceed with Visa Migration - GSB.msg | https://creditunionaust.sharepoint.com/:u:/r/sites/SMEStrategy/Shared%20Documents/General/4.%20Planning%20%26%20Execution/SBB%20-%20Feature%20Updates/2026%20-%20Feature%20Updates/Visa%20Migration/Approval%20to%20proceed%20with%20Visa%20Migration%20-%20GSB.msg?csf=1&web=1&e=Y2yQ4j",
+    "owner": "Emma Larsen",
+    "status": "To Do",
+    "comments": "Target GoLive - 28 Oct 2026 (now 18 November)18th November 2026 - Apple only allows go live 1st and 3rd Tuesday each month.CXNPL OUTSTANDING - Feature Guide required - 31st Aug - Pending App Figmas for Customer Journey to display App push notifications/banners - 14th Aug - ApplePay wireframes - complete - Updated delivery plan required - Visa VTS production -   - CCM Token config will be production ready by  - Chat bot/agent business readiness required - to be in feature guide 18 November go live date - monitor as there can be no delay with Apple lab certificationFeature guide is needed by the end of august"
+  },
+  {
+    "id": "ia2",
+    "itemNo": "2",
+    "item": "Embedded Finance - Impact Assessment",
+    "impacted": "Yes",
+    "description": "- Card Migration Applicable for MYOB customers as well - MYOB Changes will include Solo App Updates",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "",
+    "owner": "Pranav Bag",
+    "status": "To Do",
+    "comments": "29 Jun 2026CXNPL OUTSTANDING - Technical constraint to test SDK for instant card provisioning - Workaround has been identified.  Cxnpl has provided dates for testing - 2nd week of August to start testing - SDK to be provided by Cxnpl to MYOB by 10th August, with testing still to be completed after this. - Will SDK delay cause a delay in go-live? - Instant provisioning work - VTS config 17th Aug - can start testing after.  Lab certification 21st September.  - MYOB dates - SDK to be ready for 21st Sept - 17/08-21/09 CXNPL working on this - documented as part of the feature pack"
+  },
+  {
+    "id": "ia3",
+    "itemNo": "3",
+    "item": "CXNPL Testing Summary",
+    "impacted": "Yes",
+    "description": "WebApp, Android and iOS - Payment Limits - Validate Screens (for debit cards and master card mentions) - Card Transactions (freeze , unfreeze) - Self Serve Fraud Alerts - Validate Financial Crime & Fraud Settings - Bankers Console v - FAQ's, TMD, T&C's, Privacy - Apple Pay - Google Pay Bankers Console - Validations to ensure Customer details are reflecting properly - Card Number is suppressed",
+    "evidenceRequired": "YES",
+    "linkToArtifact": "",
+    "owner": "Pranav Bag",
+    "status": "To Do",
+    "comments": "CXNPL OUTSTANDING - CXNPL Testing Evidence for Mobile App, WebApp, Bankers Console - Platform - 09 Jul 2026 - - Certification with Apple - Yes - Google Pay - Yes - Testing to commence in August/in parallel to VTS tokenization.  Pranav and Alex to test post 17th August CXNPL Test Outcomes / Confirm UATCard validation test - Start testing card BIN 13th August for physical card - ecommerce transaction.  Waiting for Cuscal to change 11th-12th Aug. If this works - will get a white plastic to do further testing.Digital wallet testing - 17th Aug-21st Aug Lab certification - 21st September"
+  },
+  {
+    "id": "ia4",
+    "itemNo": "4",
+    "item": "Business+ UAT",
+    "impacted": "Yes",
+    "description": "- Payment Limits - Validate Screens (for debit cards and master card mentions) - Card Transactions (freeze , unfreeze) - Self Serve Fraud Alerts - FAQ's , TMD, T&C's, Privacy - Apple Pay - Google Pay",
+    "evidenceRequired": "YES",
+    "linkToArtifact": "- GSB UAT - Scope - Defects Raised - GSB UAT",
+    "owner": "Pranav Bag",
+    "status": "Complete",
+    "comments": "Payment Limits remain unchanged"
+  },
+  {
+    "id": "ia5",
+    "itemNo": "5",
+    "item": "Embedded Finance - Partner UAT",
+    "impacted": "Yes",
+    "description": "MYOB to provide evidence for - Payment Limits - Validate Screens (for debit cards and master cards mentions) - Card Transactions (freeze, unfreeze) - Self-Serve Fraud Alerts - FAQ's, TMD, T&C's, Privacy - Apple Pay - Google Pay",
+    "evidenceRequired": "YES",
+    "linkToArtifact": "",
+    "owner": "Pranav Bag",
+    "status": "To Do",
+    "comments": "MYOB are to provide dates for - Build Completion - Test Evidence - Solo Money T&C - with legal team  - Solo Money - Privacy Statement with legal  - Approved Customer comms - provide 21st Aug - Additional Data Event Requirements - this is card related activation data to be included snowflake.  Timeline needed.  - MYOB Website Update - MYOB to update Marketing collaterals - MYOB action - A4 card carrier - need to be designed by MYOB to be provided by 31st Aug     - Stock is needed by early sept so Idemia can run testing      - MYOB to be chased for the above (17 Aug)"
+  },
+  {
+    "id": "ia6",
+    "itemNo": "6",
+    "item": "Open Banking Impacts",
+    "impacted": "Yes",
+    "description": "CXNPL will have actions to update their Open Banking platform for new apply links and product descriptions and PSD/TMD pdf location.",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "",
+    "owner": "Pranav Bag",
+    "status": "To Do",
+    "comments": "CXNPL OUTSTANDING - CXNPL to confirm Open Banking Updates (Business + MYOB) - will be done as part of PRD GoLive. Add to Implementation Plan (Felicity will support with this) Change to feature - be part of implementation plan27 July Update: This is for LAUNCH implementation"
+  },
+  {
+    "id": "ia7",
+    "itemNo": "7",
+    "item": "Privacy Impact Assessment",
+    "impacted": "No",
+    "description": "",
+    "evidenceRequired": "YES",
+    "linkToArtifact": "",
+    "owner": "",
+    "status": "Not Applicable",
+    "comments": "05 May 2026 No Impact"
+  },
+  {
+    "id": "ia8",
+    "itemNo": "8",
+    "item": "Product Config Update",
+    "impacted": "Yes",
+    "description": "- STIP Updates - Payment Limits - Click to Pay The values are the same for both Business+ & Solo Money cards",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "VISA Business Debit Card STIP - Discussion | https://constantinople.atlassian.net/wiki/x/BQDGjw",
+    "owner": "Pranav Bag",
+    "status": "Complete",
+    "comments": "STIP Updates will be included as part of Production Implementation25 May 2026Click to Pay - not available for launch"
+  },
+  {
+    "id": "ia9",
+    "itemNo": "9",
+    "item": "Design Review -  (UAT Screens)",
+    "impacted": "Yes",
+    "description": "- Order a Card - Messaging - Figma's - Google Pay and Apple Pay",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "",
+    "owner": "Pranav BagCarly FindlayEmma Larsen",
+    "status": "To Do",
+    "comments": "- Figma's - Google Pay and Apple Pay - complete - Prompts to - Order a Card  - FIGMAs of App with Push notification and banner comm - Collateral Impact, where MasterCard is mentioned - completed Google pay Figma’s to be provided (@Stella Reeve )"
+  },
+  {
+    "id": "ia10",
+    "itemNo": "10",
+    "item": "Collaterals - Card Art",
+    "impacted": "Yes",
+    "description": "- Card Mailer Updates - Card Physical Plastic Design - Card Envelope (uplift to include Digital Wallet, banking app name) - customers who migrate, new customer - Card Activation Sticker - Card Digital Wallet Design",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "Card Design | https://creditunionaust.sharepoint.com/:f:/r/sites/BankingEmbeddedFinance-SSBSharing/VISA%20Migration%20Project/VISA%20Migration%20Project/Card%20Design?csf=1&web=1&e=PJlmzc",
+    "owner": "Emma LarsenCarly FindlayPranav Bag",
+    "status": "To Do",
+    "comments": "- Card Art - Card design briefed - Emma - complete - Card Art approved - complete - Provision of AI files to Idemia (Card design sent to Cuscal)  - Card Art - Card design proofs approved (Visa) - Visa digital card to be approved - Order placed with card carrier to print letter and envelope. Envelope order has been ordered.  Letter to be ordered. - will require two versions of card carrier letter - activation label as per existing. ACTION - check the existing BAU card carrier - Emma to provide Danielle with updated card carrier comms     - Sign off has now been provided - Sample test cards to be provided - GSB marketing to approve - CXNPL to reasses and provide to Visa for approval"
+  },
+  {
+    "id": "ia11",
+    "itemNo": "11",
+    "item": "Collaterals - Customer Comms",
+    "impacted": "Yes",
+    "description": "- Customer Communications - Tranche 1 - App/email (wc 20 Jul) - Tranche 2 - App/email (wc 3 Aug) - Tranche 3 - Reminder new card + recurring payment (wc 17 Aug) - Tranche 5 - Card plastic & carrier mail-out (wc 24 Aug) - Tranche 6 - Welcome new card + push-provision (wc 14 Sep)",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "",
+    "owner": "Wendy JonesCarly FindlayTravis Morgan",
+    "status": "To Do",
+    "comments": "- Customer communications briefed to Creative Services - Wendy - Complete - Draft comms sent to Legal for Approval -  - Comms 1 - Email Migration awareness/changes coming - Wendy/Carly - 12th Oct 2026 - Service Comms - Email - T&Cs are changing with move to new card - Pranav/Carly - 19 Oct 2026 - Comms 2 -Mail - Card plastic + card carrier - (3 weeks before card go-live) - Wendy/Carly/Danielle -  26th Oct 2026 - App Comms 3 - 1 week prior - Wendy/Carly - 11 Nov 2026 - App Comms 4 - 3 days prior 16 Nov 2026 - Comms 5 - Email card ready to activate. - Wendy/Carly - 11 Nov 2026 - App Comms (6) \"Card is live/activate card\" - Wendy/Carly 18 Nov 2026 - Comms (7) Email - Mastercard de-activated.  Activate Visa Nov 25, 2026 - Comms (8) Email - Mastercard deactivated. Activate Visa Dec 2nd, 2026 - T&C, Privacy Change Comms Shared with Customers  - Emma has provided GSB with the draft comms - pending"
+  },
+  {
+    "id": "ia12",
+    "itemNo": "12",
+    "item": "Collaterals",
+    "impacted": "Yes",
+    "description": "- T&C Updates - Google Pay Related T&C's - Apple Pay Related T&C's - FAQ's - Privacy Statement - Target Market Determination - Email Notifications - InApp Notifications",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "- Communication Plan -GSB\\_Integrated\\_Project\\_Plan\\_with\\_Comms.xlsx | https://creditunionaust.sharepoint.com/:x:/r/sites/SMEStrategy/Shared%20Documents/General/4.%20Planning%20%26%20Execution/SBB%20-%20Feature%20Updates/2026%20-%20Feature%20Updates/Visa%20Migration%20and%20Velocity/GSB_Integrated_Project_Plan_with_Comms.xlsx?d=w6cafd489d4b64c6aa3c590e0486185e2&csf=1&web=1&e=o5hDSA - GSB\\_Integrated\\_Project\\_Plan\\_with\\_Comms 300426.xlsx | https://creditunionaust.sharepoint.com/:x:/r/sites/BankingEmbeddedFinance-SSBSharing/VISA%20Migration%20Project/VISA%20Migration%20Project/GSB_Integrated_Project_Plan_with_Comms%20300426.xlsx?d=webbe8ce4df384393918dab9166ebdf1f&csf=1&web=1&e=duduve - GSM-9547 -T&C, TMDs and Privacy statement changes for Visa Migration | https://constantinople.atlassian.net/servicedesk/customer/portal/8/GSM-9547",
+    "owner": "Emma LarsenCarly FindlayPranav Bag",
+    "status": "To Do",
+    "comments": "- General T&C Updates - Drafted GSM-9547 -T&C, TMDs and Privacy statement changes for Visa Migration | https://constantinople.atlassian.net/servicedesk/customer/portal/8/GSM-9547 - Digital T&C's Google Pay & Apple Pay Related - legal team - T&C Change Comms Drafted & sent to Legal- 20 Aug 2026 - FAQ's drafted - Pranav to review and submit to legal - 21st Aug  - Website Landing page - Emma/ Shannon - 31 Aug 2026 - Privacy Statement - Drafted 20 Aug 2026 - Target Market Determination - Drafted - T&Cs TMDs Legal/Compliance Review/Approval - Pranav/Travis 01 Jul 2026 - T&C updates to be sent to Cxnpl - Pranav/Emma  - PDFs due for website upload - TMDs and T&Cs and Incentive T&Cs - Pranav/Wendy/Shannon-  31st Aug - T&Cs to be completed and approved by 30th July - Apple and google collateral - Cxnpl provided the submission template.  Marketing to use as a guide for submission to Apple. To be completed by 30/07. CXNPL OUTSTANDING - GSM-9547 -T&C, TMDs and Privacy statement changes for Visa Migration | https://constantinople.atlassian.net/servicedesk/customer/portal/8/GSM-9547 - (Digital T&C pending)- GSB to provide them in place when lab certification commences. Pranav Bag - Customers will need to re-accept the digital wallets terms and conditions - Final FAQs are being signed off by GSB"
+  },
+  {
+    "id": "ia13",
+    "itemNo": "13",
+    "item": "Collaterals - Customer Comms - MYOB",
+    "impacted": "Yes",
+    "description": "MYOB Comms",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "",
+    "owner": "Emma Larsen",
+    "status": "To Do",
+    "comments": "- Provide approved comms to MYOB - Emma - complete - MYOB provide draft for approval = 21 Aug 2026 - MYOB comms approval 31st Aug"
+  },
+  {
+    "id": "ia14",
+    "itemNo": "14",
+    "item": "GSB Website Update",
+    "impacted": "Yes",
+    "description": "- Visa migration website page: non-indexed page with information re. migration to link to from customer comms - Update PDFs 30 days prior to launch: TMDs & T&Cs - Velocity website landing page (pre-launch) - Website page updates to all pages where change to 'Visa' required - FAQs: Update existing and add new FAQs for Velocity if required - Updates to Velocity website landing page (post-launch) - Update to Business Mega Menu - OB and MB tile updates",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "",
+    "owner": "Shannon StavrouWendy JonesCarly FindlayAmy Leigh",
+    "status": "To Do",
+    "comments": "- Copy and images due for Visa migration page - complete - Assess analytics requirements /impact - Shannon (Amy) - 20 Jul 2026 - Visa migration website page: non-indexed page with information re. migration to link to from customer comms - Shannon (Amy) - 31 Aug 2026 - Update PDFs 30 days prior to launch: TMDs & T&Cs - Shannon (Amy) - 12 Oct 2026 - UAT of go live website pages / assets - Shannon/Wendy/Carly - 5th Oct 2026 - Update to Business Mega Menu - Shannon (Amy) - 27 Aug 2026 - FAQs required /Incentive campaign for Migration website page"
+  },
+  {
+    "id": "ia15",
+    "itemNo": "15",
+    "item": "MYOB Website Update",
+    "impacted": "Yes",
+    "description": "",
+    "evidenceRequired": "",
+    "linkToArtifact": "",
+    "owner": "Pranav Bag",
+    "status": "To Do",
+    "comments": ""
+  },
+  {
+    "id": "ia16",
+    "itemNo": "16",
+    "item": "Adobe launch tags",
+    "impacted": "No",
+    "description": "",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "",
+    "owner": "",
+    "status": "Not Applicable",
+    "comments": "05 May 2026 No Impact"
+  },
+  {
+    "id": "ia17",
+    "itemNo": "17",
+    "item": "Marketing Activity - GSB",
+    "impacted": "Yes",
+    "description": "Is Marketing Activity required for this feature",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "",
+    "owner": "Carly Findlay",
+    "status": "To Do",
+    "comments": "Card Migration N/A as above"
+  },
+  {
+    "id": "ia18",
+    "itemNo": "18",
+    "item": "Marketing Activity - MYOB",
+    "impacted": "Yes",
+    "description": "Marketing Collaterals such as images in paid advertisingNo active marketing",
+    "evidenceRequired": "",
+    "linkToArtifact": "",
+    "owner": "Pranav Bag",
+    "status": "To Do",
+    "comments": "09 Jul 2026 MYOB to update Marketing collaterals (ie images in paid advertising)No active marketing"
+  },
+  {
+    "id": "ia19",
+    "itemNo": "19",
+    "item": "Legal, Risk & Compliance",
+    "impacted": "Yes",
+    "description": "CXNPL to provide LRC",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "",
+    "owner": "Joash Lawton",
+    "status": "To Do",
+    "comments": "- LRC (In Progress) - ORA - Risk Assessment to be completed by Joash ACTION - 14 August Cxnpl Risk assessment - Nathan to provideRisk Assessment to be completed by 31st August@stella - chase Nathan"
+  },
+  {
+    "id": "ia20",
+    "itemNo": "20",
+    "item": "Financial Crime & Fraud",
+    "impacted": "Yes",
+    "description": "CXNPL to verify no impact to settings",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "",
+    "owner": "Emma Larsen",
+    "status": "To Do",
+    "comments": "- CXNPL to verify no impact to settings and if fraud rules are triggered for the new cards - evidence required Requested testing as part of the Feature Pack @Stella Reeve"
+  },
+  {
+    "id": "ia21",
+    "itemNo": "21",
+    "item": "FATCA / CRS",
+    "impacted": "No",
+    "description": "",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "",
+    "owner": "",
+    "status": "Not Applicable",
+    "comments": "05 May 2026 No Impact"
+  },
+  {
+    "id": "ia22",
+    "itemNo": "22",
+    "item": "Dashboard Validations",
+    "impacted": "No",
+    "description": "",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "",
+    "owner": "",
+    "status": "Not Applicable",
+    "comments": "05 May 2026 No Impact"
+  },
+  {
+    "id": "ia23",
+    "itemNo": "23",
+    "item": "CXNPL Snowflake - Data UAT",
+    "impacted": "Yes",
+    "description": "Validate Product Tables to reflect Visa",
+    "evidenceRequired": "",
+    "linkToArtifact": "- 3332 | https://cxnpl-dwp.onbmc.com/dwp/rest/share?resourceId=3332&resourceType=SB_REQUEST- Card related data points to be exposed in databricks and Snowflake",
+    "owner": "Pranav Bag",
+    "status": "To Do",
+    "comments": "- Validate product tables to reflect Visa - 3332 | https://cxnpl-dwp.onbmc.com/dwp/rest/share?resourceId=3332&resourceType=SB_REQUEST- Cards at Account Level for Customer to be made available in Snowflake. CXNPL (Business+ & MYOB) - engineering work to be completed. Critical ItemPI14 - data into snowflakeCard usage data required in snowflakeStella provided 20/07 - Ensure it’s being prioritised with Eng"
+  },
+  {
+    "id": "ia24",
+    "itemNo": "24",
+    "item": "Ops Manual Update",
+    "impacted": "Yes",
+    "description": "",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "",
+    "owner": "Alex Hoult",
+    "status": "To Do",
+    "comments": "- Ops Manual Updated (Just scheme specific refresh) - Ensure all the supporting process (ie chargeback) includes MYOB as well Alex Hoult - Minor updates required - remove ref to card schemes."
+  },
+  {
+    "id": "ia25",
+    "itemNo": "25",
+    "item": "Distributor Addendum Update",
+    "impacted": "No",
+    "description": "",
+    "evidenceRequired": "YES",
+    "linkToArtifact": "",
+    "owner": "Alex Hoult",
+    "status": "Not Applicable",
+    "comments": "anything we require from CXNPL here"
+  },
+  {
+    "id": "ia26",
+    "itemNo": "26",
+    "item": "GSB Process Update",
+    "impacted": "Yes",
+    "description": "",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "RE Prioritisation Process - Mastercard Chargeback Updates.msg | https://creditunionaust.sharepoint.com/:u:/r/sites/SMEStrategy/Shared%20Documents/General/4.%20Planning%20%26%20Execution/SBB%20-%20Feature%20Updates/2026%20-%20Feature%20Updates/Visa%20Migration/RE%20Prioritisation%20Process%20-%20Mastercard%20Chargeback%20Updates.msg?csf=1&web=1&e=fX29uA1312 | https://cxnpl-dwp.onbmc.com/dwp/rest/share?resourceId=1312&resourceType=SB_REQUEST - CXNPL to include the chargeback fee amount in the chargeback report (the same report which includes the Chargeback Settlement amount).",
+    "owner": "Alex Hoult",
+    "status": "To Do",
+    "comments": "Finance1312 | https://cxnpl-dwp.onbmc.com/dwp/rest/share?resourceId=1312&resourceType=SB_REQUEST - CXNPL to include the chargeback fee amount in the chargeback report (the same report which includes the Chargeback Settlement amount)."
+  },
+  {
+    "id": "ia27",
+    "itemNo": "27",
+    "item": "Non B&EF Impact Assessment",
+    "impacted": "Yes",
+    "description": "Workplace Post",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "",
+    "owner": "Wendy Jones",
+    "status": "To Do",
+    "comments": "Internal Comms to be shared for front line staff awareness"
+  },
+  {
+    "id": "ia28",
+    "itemNo": "28",
+    "item": "QA Framework Update",
+    "impacted": "No",
+    "description": "",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "",
+    "owner": "",
+    "status": "Not Applicable",
+    "comments": "05 May 2026 No Impact"
+  },
+  {
+    "id": "ia29",
+    "itemNo": "29",
+    "item": "Bankers Console - Impact",
+    "impacted": "Yes",
+    "description": "- Customer details are reflecting properly - Card Number is suppressed",
+    "evidenceRequired": "YES",
+    "linkToArtifact": "",
+    "owner": "Pranav Bag",
+    "status": "To Do",
+    "comments": "GSB will test Business+ Bankers Console - ACTION CXNPL to confirm if card info is visible for MYOB in Bankers Console?"
+  },
+  {
+    "id": "ia30",
+    "itemNo": "30",
+    "item": "Hardships & Collections Strategy - Uplift",
+    "impacted": "No",
+    "description": "",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "",
+    "owner": "",
+    "status": "Not Applicable",
+    "comments": "05 May 2026 No Impact"
+  },
+  {
+    "id": "ia31",
+    "itemNo": "31",
+    "item": "4th Party Due Diligence",
+    "impacted": "No",
+    "description": "",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "",
+    "owner": "",
+    "status": "Complete",
+    "comments": "Cuscal has registered Cxnpl as a fourth Party"
+  },
+  {
+    "id": "ia32",
+    "itemNo": "33",
+    "item": "Performance Testing",
+    "impacted": "No",
+    "description": "",
+    "evidenceRequired": "YES",
+    "linkToArtifact": "",
+    "owner": "",
+    "status": "Not Applicable",
+    "comments": "05 May 2026 No Impact (covered in line 35)"
+  },
+  {
+    "id": "ia33",
+    "itemNo": "34",
+    "item": "Architecture Updates",
+    "impacted": "Yes",
+    "description": "Any new third parties or methods of integrationAPI's exposed to MYOB + Other",
+    "evidenceRequired": "YES",
+    "linkToArtifact": "",
+    "owner": "Alex Hoult",
+    "status": "To Do",
+    "comments": "- Solution Architecture Information – Business + - Solution Architecture Information – MYOB - with details of API's exposed to MYOB - SAD template to be provided to Cxnpl and completed - Mate - Impact assessment activities In Progress - as part of the Feature Pack @Stella Reeve"
+  },
+  {
+    "id": "ia34",
+    "itemNo": "35",
+    "item": "External Penetration testing",
+    "impacted": "Yes",
+    "description": "Any of the following actions would trigger an External Pen test covering that item - Major API Changes - Major application changes - Major infrastructure changes - Significant config changes - Changes to code deployment process - Changes to authentication",
+    "evidenceRequired": "YES",
+    "linkToArtifact": "",
+    "owner": "Alex Hoult",
+    "status": "To Do",
+    "comments": "- CXNPL to advise - Danielle to check with security team Feature Pack - @Stella Reeve"
+  },
+  {
+    "id": "ia35",
+    "itemNo": "36",
+    "item": "Security Signoff",
+    "impacted": "Yes",
+    "description": "",
+    "evidenceRequired": "YES",
+    "linkToArtifact": "",
+    "owner": "Alex Hoult",
+    "status": "To Do",
+    "comments": "Included in feature pack - PEN testing"
+  },
+  {
+    "id": "ia36",
+    "itemNo": "37",
+    "item": "Tech One / GL Impacts",
+    "impacted": "Yes",
+    "description": "CXNPL to provide GL files for regression testingCXNPL to confirm Finance ImpactsBilling via S1",
+    "evidenceRequired": "YES",
+    "linkToArtifact": "",
+    "owner": "Alex Hoult",
+    "status": "To Do",
+    "comments": "Billing via S1Regression testing - Provide GL files for regression testing (incl Business+ & MYOB Transactions) Test transactions will be required. - CXNPL to confirm Finance Impacts - Alex to engage Cxnpl and finance -scope document for Danielle.  To be sent by 16/07 - COMPLETE - Test Mastercard items that will still flow through for chargebacks - Feature pack - Test file to be provided to Visa and tested Action: Testing file to be provided by 14th Aug"
+  },
+  {
+    "id": "ia37",
+    "itemNo": "38",
+    "item": "Counterparty Credit Risk Management Framework impacts",
+    "impacted": "No",
+    "description": "",
+    "evidenceRequired": "",
+    "linkToArtifact": "",
+    "owner": "",
+    "status": "Not Applicable",
+    "comments": "Check with Alex again once CXNPL advise finance impacts"
+  },
+  {
+    "id": "ia38",
+    "itemNo": "39",
+    "item": "Expected Credit Loss Modelling",
+    "impacted": "No",
+    "description": "ECL is applicable only for lending productsDo we need to engage credit risk on this ?",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "",
+    "owner": "",
+    "status": "Not Applicable",
+    "comments": "05 May 2026 No Impact"
+  },
+  {
+    "id": "ia39",
+    "itemNo": "40",
+    "item": "QRM Update",
+    "impacted": "No",
+    "description": "",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "",
+    "owner": "",
+    "status": "Not Applicable",
+    "comments": "05 May 2026 No Impact"
+  },
+  {
+    "id": "ia40",
+    "itemNo": "41",
+    "item": "Regulatory Reports Update / Scheme Compliance Reporting",
+    "impacted": "Yes",
+    "description": "",
+    "evidenceRequired": "YES",
+    "linkToArtifact": "",
+    "owner": "Alex Hoult",
+    "status": "Complete",
+    "comments": "Alex to check with Christine Wild - RBA reporting, ApplePay reporting - Alex to check by 17/07 - GSB receive confirmation that there’s no impact to reg reporting - @Alex Hoult to provide evidence"
+  },
+  {
+    "id": "ia41",
+    "itemNo": "42",
+    "item": "Customer Matching Report - Impact",
+    "impacted": "No",
+    "description": "",
+    "evidenceRequired": "YES",
+    "linkToArtifact": "",
+    "owner": "",
+    "status": "Not Applicable",
+    "comments": "05 May 2026 No Impact"
+  },
+  {
+    "id": "ia42",
+    "itemNo": "43",
+    "item": "Data Integration Updates (SAS / Data Program)",
+    "impacted": "Yes",
+    "description": "- Value in table are changing. - Additional Columns in Subscription Table related to Card Data - Regression testing",
+    "evidenceRequired": "YES",
+    "linkToArtifact": "- 3332 | https://cxnpl-dwp.onbmc.com/dwp/rest/share?resourceId=3332&resourceType=SB_REQUEST- Card related data points to be exposed in databricks and Snowflake",
+    "owner": "Pranav Bag",
+    "status": "To Do",
+    "comments": "- Provide Data Model files for regression testing Data Team to be engaged and ETA to be assessed - feature pack required - In progress while CXNPL provides update on Snowflake - @Stella Reeve     - GL data + data integration update      - With CXNPL engineering for review - PB requesting early September to be available"
+  },
+  {
+    "id": "ia43",
+    "itemNo": "44",
+    "item": "Notify Enterprise Data and Data Governance",
+    "impacted": "No",
+    "description": "",
+    "evidenceRequired": "",
+    "linkToArtifact": "",
+    "owner": "",
+    "status": "Not Applicable",
+    "comments": "05 May 2026 No Impact"
+  },
+  {
+    "id": "ia44",
+    "itemNo": "45",
+    "item": "S3 Updates",
+    "impacted": "No",
+    "description": "",
+    "evidenceRequired": "YES",
+    "linkToArtifact": "",
+    "owner": "",
+    "status": "Not Applicable",
+    "comments": "05 May 2026 No Impact"
+  },
+  {
+    "id": "ia45",
+    "itemNo": "46",
+    "item": "GSB Tech Setup",
+    "impacted": "No",
+    "description": "",
+    "evidenceRequired": "",
+    "linkToArtifact": "- GSB - Tech Setup Details",
+    "owner": "",
+    "status": "Not Applicable",
+    "comments": "05 May 2026 No Impact"
+  },
+  {
+    "id": "ia46",
+    "itemNo": "47",
+    "item": "Configuration and Access Provisioning - UAT",
+    "impacted": "No",
+    "description": "",
+    "evidenceRequired": "YES",
+    "linkToArtifact": "- GSB - Tech Setup Details",
+    "owner": "",
+    "status": "Not Applicable",
+    "comments": "05 May 2026 No Impact"
+  },
+  {
+    "id": "ia47",
+    "itemNo": "48",
+    "item": "Configuration and Access Provisioning - Production",
+    "impacted": "No",
+    "description": "",
+    "evidenceRequired": "YES",
+    "linkToArtifact": "- GSB - Tech Setup Details",
+    "owner": "",
+    "status": "Not Applicable",
+    "comments": "05 May 2026 No Impact"
+  },
+  {
+    "id": "ia48",
+    "itemNo": "49",
+    "item": "Implementation and Rollback Plan",
+    "impacted": "Yes",
+    "description": "- VISA BIN LIVE in Production - Google Pay GoLive - Card Migration - Apple Pay GoLive - GSB Website Updates",
+    "evidenceRequired": "YES",
+    "linkToArtifact": "GSB & MYOB VISA & Digital Wallet Integrated Plan - Key Milestones & Dates | https://constantinople.atlassian.net/wiki/x/AYC4jQ - Readiness Approach - Google - Readiness Approach - Apple",
+    "owner": "Emma Larsen",
+    "status": "To Do",
+    "comments": "- Implementation Plan with sequence of steps and pre-requisites including customer impact and rollback details - VISA BIN LIVE in Production - 31 July 2026 - Google Pay GoLive -  6 Oct 2026 - Card Migration - 18 Nov 2026 - Apple Pay GoLive - 17 Nov 2026 - GSB Website Updates - xx Nov 2026 Include mention of the approach in the feature pack (i.e flags can be switched off however can’t ‘rollback’ as the block is being placed on Mastercard)"
+  },
+  {
+    "id": "ia49",
+    "itemNo": "50",
+    "item": "Approval Committees",
+    "impacted": "Yes",
+    "description": "PPC for Noting",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "",
+    "owner": "Pranav Bag",
+    "status": "Complete",
+    "comments": "Paper to be presented to PC on 30/07.  Require papers by 23/07."
+  },
+  {
+    "id": "ia50",
+    "itemNo": "51",
+    "item": "Other",
+    "impacted": "Yes",
+    "description": "- Visa Access - 3rd Party Agent Access - (Cuscal)",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "- FW VSDC CA - Access Set-up for GSB Business Security.msg | https://creditunionaust.sharepoint.com/:u:/r/sites/SMEStrategy/Shared%20Documents/General/4.%20Planning%20%26%20Execution/SBB%20-%20Feature%20Updates/2026%20-%20Feature%20Updates/Visa%20Migration/FW%20VSDC%20CA%20-%20Access%20Set-up%20for%20GSB%20Business%20%20Security.msg?csf=1&web=1&e=78mFdo - FW VSDC CA - Access Set-up for GSB Business Security\\_Emma.msg | https://creditunionaust.sharepoint.com/:u:/r/sites/SMEStrategy/Shared%20Documents/General/4.%20Planning%20%26%20Execution/SBB%20-%20Feature%20Updates/2026%20-%20Feature%20Updates/Visa%20Migration/FW%20VSDC%20CA%20-%20Access%20Set-up%20for%20GSB%20Business%20%20Security_Emma.msg?csf=1&web=1&e=aaG9gN - Visa Access\\_Emma.png | https://creditunionaust.sharepoint.com/:i:/r/sites/SMEStrategy/Shared%20Documents/General/4.%20Planning%20%26%20Execution/SBB%20-%20Feature%20Updates/2026%20-%20Feature%20Updates/Visa%20Migration/Visa%20Access_Emma.png?csf=1&web=1&e=7cpad3",
+    "owner": "Emma Larsen",
+    "status": "Complete",
+    "comments": "- Register Constantinople as third-party agent. (in progress) - require update from Cuscal - Register relationship for Cuscal and GSB (Visa Platform) CXNPL to check access"
+  },
+  {
+    "id": "ia51",
+    "itemNo": "52",
+    "item": "Post GoLive Activities",
+    "impacted": "Yes",
+    "description": "- Mastercard De-Activated - Website - Temporary pages decommissioning",
+    "evidenceRequired": "NO",
+    "linkToArtifact": "",
+    "owner": "Emma LarsenShannon StavrouAmy Leigh",
+    "status": "Not Applicable",
+    "comments": "- Mastercard Deactivated - Emma - 10 Nov 2026 - Website - Decommission of Visa migration / temporary pages/assets - Shannon (Amy) -  18 Dec 2026"
+  }
+];
+
+const DEFAULT_BR_GOLIVE = [
+  {
+    "id": "gl1",
+    "group": "Go-Live Checklist",
+    "item": "Business+ Toggle ON - PRD",
+    "comments": "",
+    "status": "To Do"
+  },
+  {
+    "id": "gl2",
+    "group": "Go-Live Checklist",
+    "item": "Business + Toggle ON - PRD - Date & Time",
+    "comments": "",
+    "status": "To Do"
+  },
+  {
+    "id": "gl3",
+    "group": "Go-Live Checklist",
+    "item": "Embedded Finance - Toggle ON - PRD",
+    "comments": "",
+    "status": "To Do"
+  },
+  {
+    "id": "gl4",
+    "group": "Go-Live Checklist",
+    "item": "Embedded Finance - Toggle ON - PRD - Date & Time",
+    "comments": "",
+    "status": "To Do"
+  },
+  {
+    "id": "gl5",
+    "group": "Go-Live Checklist",
+    "item": "Customer Impact",
+    "comments": "<Does this require a forced App upgrade>",
+    "status": "In Progress"
+  },
+  {
+    "id": "gl6",
+    "group": "Go-Live Checklist",
+    "item": "Outage",
+    "comments": "<will this require outage>",
+    "status": "In Progress"
+  },
+  {
+    "id": "gl7",
+    "group": "Go-Live Checklist",
+    "item": "Rollback",
+    "comments": "- Simple -  rollback will take less than 30 mins or - Complex – rollback will take more than 30 mins)",
+    "status": "In Progress"
+  },
+  {
+    "id": "gl8",
+    "group": "Go-Live Checklist",
+    "item": "Release Status - PRD",
+    "comments": "TO DO",
+    "status": "In Progress"
+  },
+  {
+    "id": "gl9",
+    "group": "Internal Governance",
+    "item": "Approval - For Production Toggle ON",
+    "comments": "",
+    "status": "To Do"
+  },
+  {
+    "id": "gl10",
+    "group": "Internal Governance",
+    "item": "CAB",
+    "comments": "",
+    "status": "To Do"
+  },
+  {
+    "id": "gl11",
+    "group": "Internal Governance",
+    "item": "Release Notification",
+    "comments": "",
+    "status": "To Do"
+  },
+  {
+    "id": "gl12",
+    "group": "Internal Governance",
+    "item": "Small Business Banking - Delivery Log",
+    "comments": "Small Business Banking - 2026 - Production Upgrade(s) | https://confluence.cua.com.au/x/xQLRG",
+    "status": "In Progress"
+  },
+  {
+    "id": "gl13",
+    "group": "Internal Governance",
+    "item": "Evidences",
+    "comments": "Visa Migration | https://creditunionaust.sharepoint.com/:f:/r/sites/SMEStrategy/Shared%20Documents/General/4.%20Planning%20%26%20Execution/SBB%20-%20Feature%20Updates/2026%20-%20Feature%20Updates/Visa%20Migration?csf=1&web=1&e=h4OVI2",
+    "status": "In Progress"
+  }
+];
+
+const DEFAULT_BR_PIV = [
+  {
+    "id": "piv1",
+    "item": "CXNPL PIV  - Business +",
+    "comments": "",
+    "status": "To Do"
+  },
+  {
+    "id": "piv2",
+    "item": "CXNPL PIV  - MYOB",
+    "comments": "",
+    "status": "To Do"
+  },
+  {
+    "id": "piv3",
+    "item": "GSB PIV - Business +",
+    "comments": "<JIRA>",
+    "status": "In Progress"
+  },
+  {
+    "id": "piv4",
+    "item": "Incidents (if any)",
+    "comments": "",
+    "status": "To Do"
+  },
+  {
+    "id": "piv5",
+    "item": "CXNPL - Delivery Plan (Integrated)",
+    "comments": "GSB & MYOB VISA & Digital Wallet Integrated Plan - Key Milestones & Dates | https://constantinople.atlassian.net/wiki/x/AYC4jQ",
+    "status": "In Progress"
+  },
+  {
+    "id": "piv6",
+    "item": "CXNPL - Release Notes",
+    "comments": "",
+    "status": "To Do"
+  },
+  {
+    "id": "piv7",
+    "item": "Other Reference",
+    "comments": "- MasterCard - Digital Wallets (Google Pay) - Business Readiness | https://confluence.cua.com.au/x/pgeiDQ - MasterCard - Digital Wallets (Apple Pay) - Business Readiness | https://confluence.cua.com.au/x/LAiiDQ",
+    "status": "In Progress"
+  }
+];
+
+const DEFAULT_BR_TECHSETUP = [
+  {
+    "id": "ts1",
+    "item": "AD Group Creation",
+    "requestVia": "- Network Folder/Account Admin - ServiceNow Employee Center | https://creditunionau.service-now.com/cua?id=sc_cat_item&sys_id=a709d9dd4fed6a00c2e4eb4f0310c7c3",
+    "details": "",
+    "status": "To Do"
+  },
+  {
+    "id": "ts2",
+    "item": "Service NOW Creation",
+    "requestVia": "- ServiceNow Technology Engagement Request - ServiceNow Employee Center | https://creditunionau.service-now.com/cua?id=sc_cat_item&sys_id=65e7c9a0dbae0e90726b08b4f39619ed&table=sc_cat_item",
+    "details": "",
+    "status": "To Do"
+  },
+  {
+    "id": "ts3",
+    "item": "UAT- User Access",
+    "requestVia": "",
+    "details": "",
+    "status": "To Do"
+  },
+  {
+    "id": "ts4",
+    "item": "PRD - User Access",
+    "requestVia": "",
+    "details": "",
+    "status": "To Do"
+  }
+];
+
+const DEFAULT_BR_UAT = [
+  {
+    "id": "uat1",
+    "scope": "WebApp and Mobile App - Payment Limits - Validate Screens (for debit cards and master card mentions) - Card Transactions (freeze , unfreeze) - Self Serve Fraud Alerts - FAQ's , TMD, T&C's, Privacy - Apple Pay - Google Pay",
+    "owner": "Pranav Bag",
+    "status": "To Do",
+    "comments": ""
+  }
+];
+
+const DEFAULT_BR_DEFECTS = [];
+
 
 
 
@@ -3473,6 +4278,12 @@ function CategoryPill({category}) {
   return <span style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:12,background:c+"18",color:c,border:`1px solid ${c}44`,whiteSpace:"nowrap"}}>{category}</span>;
 }
 
+function YesNoPill({value}) {
+  const yes = value === "Yes";
+  const c = yes ? "#16a34a" : "#64748b";
+  return <span style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:12,background:c+"18",color:c,border:`1px solid ${c}44`,whiteSpace:"nowrap"}}>{value || "No"}</span>;
+}
+
 function nextReqId(rows) {
   const nums = rows.map(r => { const m = /(\d+)\s*$/.exec(r.reqId||""); return m ? parseInt(m[1],10) : 0; });
   const next = (nums.length ? Math.max(...nums) : 0) + 1;
@@ -3707,6 +4518,420 @@ function TechPlanTab({data, setData, editMode}) {
       <div style={{marginTop:4,fontSize:11,color:"#94a3b8"}}>
         {filledCount} of {data.length} sections populated · drag ⠿ to reorder in Edit Mode
       </div>
+    </div>
+  );
+}
+
+// ── Business Readiness ──────────────────────────────────────────────────────
+const BR_CHECKLIST_STATUSES = ["To Do","In Progress","Complete","Not Applicable"];
+const BR_IMPACTED_OPTIONS = ["Yes","No"];
+const BR_DEFECT_PRIORITIES = ["High","Medium","Low"];
+const BR_DEFECT_STATUSES = ["Open","Monitor","Pending Retest","Closed"];
+
+function BRPriorityBadge({priority}) {
+  const c = priority==="High" ? {bg:"#fee2e2",text:"#991b1b"} : priority==="Medium" ? {bg:"#fef3c7",text:"#92400e"} : {bg:"#f1f5f9",text:"#475569"};
+  return <span style={{fontSize:10,fontWeight:700,padding:"2px 7px",borderRadius:4,background:c.bg,color:c.text,textTransform:"uppercase",letterSpacing:0.5}}>{priority||"Low"}</span>;
+}
+
+// Shared register for the checklist-style sections: Go-Live & Approvals,
+// PIV & Prerequisites, Tech Setup, UAT — same add/edit/delete/reorder/CSV
+// shape, just a different column set per section.
+function BRChecklistTab({data, setData, editMode, columns, grouped, csvName, itemLabel}) {
+  const dragHandlers = useDraggableRows(data, setData, editMode);
+  function update(id, field, val) { setData(prev => prev.map(r => r.id===id ? {...r,[field]:val} : r)); }
+  function addRow(group) {
+    const blank = {id:mkId(), status:"To Do"};
+    columns.forEach(c => { if (c.key!=="status") blank[c.key] = ""; });
+    if (grouped) blank.group = group;
+    setData(prev => [...prev, blank]);
+  }
+  function delRow(id) { setData(prev => prev.filter(r => r.id !== id)); }
+
+  const thS = {padding:"9px 10px",textAlign:"left",fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"#94a3b8",background:"#0f172a",whiteSpace:"nowrap",borderBottom:"2px solid #1e293b"};
+  const tdS = {padding:"9px 10px",fontSize:12,color:"#334155",verticalAlign:"top",borderBottom:"1px solid #f1f5f9"};
+
+  const groups = grouped ? [...new Set(data.map(r=>r.group))] : [null];
+
+  function renderTable(rows, groupKey) {
+    return (
+      <div className="pcard" style={{background:"#fff",borderRadius:12,border:"1px solid #e2e8f0",overflow:"hidden",boxShadow:"0 2px 8px rgba(0,0,0,0.05)",marginBottom:16}}>
+        <div style={{overflowX:"auto"}}>
+          <table style={{width:"100%",borderCollapse:"collapse"}}>
+            <thead>
+              <tr>
+                {editMode && <th style={{...thS,width:60}}>Order</th>}
+                {columns.map(c => <th key={c.key} style={{...thS,width:c.width}}>{c.label}</th>)}
+                <th style={{...thS,width:120}}>Status</th>
+                {editMode && <th style={{...thS,width:36}}/>}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r,i) => (
+                <tr key={r.id} style={{background:i%2===0?"#fff":"#f8fafc",cursor:editMode?"grab":"default"}} {...dragHandlers(data.indexOf(r))}>
+                  {editMode && (
+                    <td style={{...tdS,textAlign:"center"}}>
+                      <span style={{color:"#94a3b8",fontSize:14,cursor:"grab",userSelect:"none"}} title="Drag to reorder">⠿</span>
+                    </td>
+                  )}
+                  {columns.map(c => (
+                    <td key={c.key} style={tdS}>
+                      {editMode
+                        ? <InlineEdit value={r[c.key]} onChange={v=>update(r.id,c.key,v)} multiline={c.multiline}/>
+                        : <span style={{lineHeight:1.5}}>{r[c.key] || <span style={{color:"#94a3b8",fontStyle:"italic"}}>Not yet recorded</span>}</span>}
+                    </td>
+                  ))}
+                  <td style={tdS}>
+                    {editMode
+                      ? <InlineEdit value={r.status} onChange={v=>update(r.id,"status",v)} options={BR_CHECKLIST_STATUSES}/>
+                      : <StatusBadge status={r.status}/>}
+                  </td>
+                  {editMode && (
+                    <td style={{...tdS,textAlign:"center"}}>
+                      <button onClick={()=>delRow(r.id)} style={{color:"#ef4444",background:"none",border:"none",cursor:"pointer",fontSize:14}}>✕</button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {editMode && (
+          <div style={{padding:"10px 14px",borderTop:"1px solid #f1f5f9"}}>
+            <button onClick={()=>addRow(groupKey)} style={{padding:"6px 12px",borderRadius:8,border:"none",background:"#0f172a",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer"}}>+ Add {itemLabel}</button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  const csvCols = grouped ? ["group",...columns.map(c=>c.key),"status"] : [...columns.map(c=>c.key),"status"];
+
+  return (
+    <div>
+      <div style={{display:"flex",justifyContent:"flex-end",marginBottom:12}} className="no-print">
+        <button onClick={() => downloadCSV(csvName, toCSV(data, csvCols))}
+          style={{padding:"6px 12px",borderRadius:8,border:"1px solid #e2e8f0",background:"#fff",color:"#475569",fontSize:11,fontWeight:600,cursor:"pointer"}}>Export CSV</button>
+      </div>
+      {groups.map(g => (
+        <div key={g||"_all"}>
+          {grouped && <div style={{fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"#94a3b8",marginBottom:10}}>{g}</div>}
+          {renderTable(data.filter(r=>!grouped||r.group===g), g)}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Impact Assessment register (the core, largest section) ─────────────────
+function BRImpactTab({data, setData, editMode, filterImpacted, setFilterImpacted, filterStatus, setFilterStatus}) {
+  const [expanded, setExpanded] = useState({});
+  const dragHandlers = useDraggableRows(data, setData, editMode);
+
+  function update(id, field, val) { setData(prev => prev.map(r => r.id===id ? {...r,[field]:val} : r)); }
+  function addRow() {
+    setData(prev => [...prev, {id:mkId(), itemNo:String(prev.length+1), item:"New Item", impacted:"No",
+      description:"", evidenceRequired:"", linkToArtifact:"", owner:"", status:"To Do", comments:""}]);
+  }
+  function delRow(id) { setData(prev => prev.filter(r => r.id !== id)); }
+  function toggle(id) { setExpanded(prev => ({...prev, [id]: !prev[id]})); }
+
+  let visible = data;
+  if (filterImpacted !== "All") visible = visible.filter(r => r.impacted === filterImpacted);
+  if (filterStatus !== "All") visible = visible.filter(r => r.status === filterStatus);
+
+  const thS = {padding:"9px 10px",textAlign:"left",fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"#94a3b8",background:"#0f172a",whiteSpace:"nowrap",borderBottom:"2px solid #1e293b"};
+  const tdS = {padding:"9px 10px",fontSize:12,color:"#334155",verticalAlign:"top",borderBottom:"1px solid #f1f5f9"};
+  const detailLabel = {fontSize:9,fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:"#94a3b8",marginBottom:2};
+
+  return (
+    <div>
+      <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap",alignItems:"center"}} className="no-print">
+        <select value={filterImpacted} onChange={e=>setFilterImpacted(e.target.value)} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #e2e8f0",fontSize:11,background:"#fff"}}>
+          <option>All</option>
+          {BR_IMPACTED_OPTIONS.map(o=><option key={o}>{o}</option>)}
+        </select>
+        <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #e2e8f0",fontSize:11,background:"#fff"}}>
+          <option>All</option>
+          {BR_CHECKLIST_STATUSES.map(o=><option key={o}>{o}</option>)}
+        </select>
+        <div style={{marginLeft:"auto",display:"flex",gap:8}}>
+          <button onClick={() => downloadCSV("impact-assessment.csv",toCSV(data,["itemNo","item","impacted","description","evidenceRequired","linkToArtifact","owner","status","comments"]))}
+            style={{padding:"6px 12px",borderRadius:8,border:"1px solid #e2e8f0",background:"#fff",color:"#475569",fontSize:11,fontWeight:600,cursor:"pointer"}}>Export CSV</button>
+          {editMode && <button onClick={addRow} style={{padding:"6px 12px",borderRadius:8,border:"none",background:"#0f172a",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer"}}>+ Add Item</button>}
+        </div>
+      </div>
+
+      <div style={{background:"#fff",borderRadius:12,border:"1px solid #e2e8f0",overflow:"hidden",boxShadow:"0 2px 8px rgba(0,0,0,0.05)"}}>
+        <div style={{overflowX:"auto"}}>
+          <table style={{width:"100%",borderCollapse:"collapse",minWidth:800}}>
+            <thead>
+              <tr>
+                {editMode && <th style={{...thS,width:60}}>Order</th>}
+                <th style={{...thS,width:44}}>#</th>
+                <th style={thS}>Item</th>
+                <th style={{...thS,width:90}}>Impacted</th>
+                <th style={{...thS,width:150}}>Owner</th>
+                <th style={{...thS,width:130}}>Status</th>
+                {editMode && <th style={{...thS,width:36}}/>}
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map((r,i) => (
+                <React.Fragment key={r.id}>
+                  <tr style={{background:i%2===0?"#fff":"#f8fafc",cursor:editMode?"grab":"pointer"}}
+                    onClick={()=>!editMode && toggle(r.id)} {...dragHandlers(data.indexOf(r))}>
+                    {editMode && (
+                      <td style={{...tdS,textAlign:"center"}} onClick={e=>e.stopPropagation()}>
+                        <span style={{color:"#94a3b8",fontSize:14,cursor:"grab",userSelect:"none"}} title="Drag to reorder">⠿</span>
+                      </td>
+                    )}
+                    <td style={tdS}>{editMode ? <InlineEdit value={r.itemNo} onChange={v=>update(r.id,"itemNo",v)}/> : r.itemNo}</td>
+                    <td style={tdS} onClick={e=>editMode && e.stopPropagation()}>
+                      {editMode ? <InlineEdit value={r.item} onChange={v=>update(r.id,"item",v)}/> : <span style={{fontWeight:600}}>{r.item}</span>}
+                      {!editMode && <span style={{marginLeft:6,fontSize:9,color:"#94a3b8"}}>{expanded[r.id]?"▲ hide detail":"▼ show detail"}</span>}
+                    </td>
+                    <td style={tdS} onClick={e=>editMode && e.stopPropagation()}>
+                      {editMode ? <InlineEdit value={r.impacted} onChange={v=>update(r.id,"impacted",v)} options={BR_IMPACTED_OPTIONS}/> : <YesNoPill value={r.impacted}/>}
+                    </td>
+                    <td style={tdS} onClick={e=>editMode && e.stopPropagation()}>{editMode ? <InlineEdit value={r.owner} onChange={v=>update(r.id,"owner",v)}/> : (r.owner || <span style={{color:"#94a3b8",fontStyle:"italic"}}>Unassigned</span>)}</td>
+                    <td style={tdS} onClick={e=>editMode && e.stopPropagation()}>
+                      {editMode ? <InlineEdit value={r.status} onChange={v=>update(r.id,"status",v)} options={BR_CHECKLIST_STATUSES}/> : <StatusBadge status={r.status}/>}
+                    </td>
+                    {editMode && (
+                      <td style={{...tdS,textAlign:"center"}} onClick={e=>e.stopPropagation()}>
+                        <button onClick={()=>delRow(r.id)} style={{color:"#ef4444",background:"none",border:"none",cursor:"pointer",fontSize:14}}>✕</button>
+                      </td>
+                    )}
+                  </tr>
+                  {(expanded[r.id] || editMode) && (
+                    <tr style={{background:"#fafaff"}}>
+                      <td colSpan={editMode?6:5} style={{padding:"10px 14px 16px",borderBottom:"1px solid #f1f5f9"}}>
+                        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+                          <div>
+                            <div style={detailLabel}>Description</div>
+                            {editMode ? <InlineEdit value={r.description} onChange={v=>update(r.id,"description",v)} multiline/> : <div style={{fontSize:12,color:"#334155",lineHeight:1.6,whiteSpace:"pre-wrap"}}>{r.description || "—"}</div>}
+                          </div>
+                          <div>
+                            <div style={detailLabel}>Comments</div>
+                            {editMode ? <InlineEdit value={r.comments} onChange={v=>update(r.id,"comments",v)} multiline/> : <div style={{fontSize:12,color:"#334155",lineHeight:1.6,whiteSpace:"pre-wrap"}}>{r.comments || "—"}</div>}
+                          </div>
+                          <div>
+                            <div style={detailLabel}>Evidence Required</div>
+                            {editMode ? <InlineEdit value={r.evidenceRequired} onChange={v=>update(r.id,"evidenceRequired",v)} multiline/> : <div style={{fontSize:12,color:"#334155",lineHeight:1.6,whiteSpace:"pre-wrap"}}>{r.evidenceRequired || "—"}</div>}
+                          </div>
+                          <div>
+                            <div style={detailLabel}>Link to Artifact</div>
+                            {editMode ? <InlineEdit value={r.linkToArtifact} onChange={v=>update(r.id,"linkToArtifact",v)} multiline/> : <div style={{fontSize:12,color:"#334155",lineHeight:1.6,whiteSpace:"pre-wrap",wordBreak:"break-word"}}>{r.linkToArtifact || "—"}</div>}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div style={{marginTop:12,fontSize:11,color:"#94a3b8"}}>
+        {data.length} items tracked · {data.filter(r=>r.impacted==="Yes").length} impacted · click a row to expand full detail
+      </div>
+    </div>
+  );
+}
+
+// ── Defects register ─────────────────────────────────────────────────────
+function BRDefectsTab({data, setData, editMode}) {
+  const dragHandlers = useDraggableRows(data, setData, editMode);
+  function update(id, field, val) { setData(prev => prev.map(r => r.id===id ? {...r,[field]:val} : r)); }
+  function addRow() {
+    setData(prev => [...prev, {id:mkId(), raisedBy:"", createdDate:"", key:"", description:"", priority:"Low", launchBlocker:"No", status:"Open"}]);
+  }
+  function delRow(id) { setData(prev => prev.filter(r => r.id !== id)); }
+
+  const thS = {padding:"9px 10px",textAlign:"left",fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"#94a3b8",background:"#0f172a",whiteSpace:"nowrap",borderBottom:"2px solid #1e293b"};
+  const tdS = {padding:"9px 10px",fontSize:12,color:"#334155",verticalAlign:"top",borderBottom:"1px solid #f1f5f9"};
+
+  return (
+    <div>
+      <div className="pcard" style={{background:"#fff",borderRadius:12,border:"1px solid #e2e8f0",padding:"14px 18px",marginBottom:16,display:"flex",gap:24,flexWrap:"wrap"}}>
+        <div>
+          <div style={{fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"#94a3b8",marginBottom:6}}>Priority</div>
+          <div style={{display:"flex",gap:6}}>{BR_DEFECT_PRIORITIES.map(p=><BRPriorityBadge key={p} priority={p}/>)}</div>
+        </div>
+        <div>
+          <div style={{fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"#94a3b8",marginBottom:6}}>Status</div>
+          <div style={{display:"flex",gap:6}}>{BR_DEFECT_STATUSES.map(s=><StatusBadge key={s} status={s}/>)}</div>
+        </div>
+      </div>
+
+      <div style={{display:"flex",justifyContent:"flex-end",marginBottom:12}} className="no-print">
+        <button onClick={() => downloadCSV("defects.csv",toCSV(data,["raisedBy","createdDate","key","description","priority","launchBlocker","status"]))}
+          style={{padding:"6px 12px",borderRadius:8,border:"1px solid #e2e8f0",background:"#fff",color:"#475569",fontSize:11,fontWeight:600,cursor:"pointer",marginRight:8}}>Export CSV</button>
+        {editMode && <button onClick={addRow} style={{padding:"6px 12px",borderRadius:8,border:"none",background:"#0f172a",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer"}}>+ Add Defect</button>}
+      </div>
+
+      {data.length === 0 ? (
+        <div style={{textAlign:"center",padding:"40px 20px",color:"#94a3b8",fontSize:13,background:"#fff",borderRadius:12,border:"1px dashed #e2e8f0"}}>
+          No defects logged yet. {editMode ? "Click “+ Add Defect” to log one." : "Switch to Edit Mode to log a defect."}
+        </div>
+      ) : (
+        <div style={{background:"#fff",borderRadius:12,border:"1px solid #e2e8f0",overflow:"hidden",boxShadow:"0 2px 8px rgba(0,0,0,0.05)"}}>
+          <div style={{overflowX:"auto"}}>
+            <table style={{width:"100%",borderCollapse:"collapse"}}>
+              <thead>
+                <tr>
+                  {editMode && <th style={{...thS,width:60}}>Order</th>}
+                  <th style={{...thS,width:130}}>Raised By</th>
+                  <th style={{...thS,width:110}}>Created</th>
+                  <th style={{...thS,width:90}}>Key</th>
+                  <th style={thS}>Description</th>
+                  <th style={{...thS,width:90}}>Priority</th>
+                  <th style={{...thS,width:120}}>Launch Blocker</th>
+                  <th style={{...thS,width:110}}>Status</th>
+                  {editMode && <th style={{...thS,width:36}}/>}
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((r,i) => (
+                  <tr key={r.id} style={{background:i%2===0?"#fff":"#f8fafc",cursor:editMode?"grab":"default"}} {...dragHandlers(i)}>
+                    {editMode && <td style={{...tdS,textAlign:"center"}}><span style={{color:"#94a3b8",fontSize:14,cursor:"grab"}} title="Drag to reorder">⠿</span></td>}
+                    <td style={tdS}>{editMode ? <InlineEdit value={r.raisedBy} onChange={v=>update(r.id,"raisedBy",v)}/> : r.raisedBy}</td>
+                    <td style={tdS}>{editMode ? <InlineEdit value={r.createdDate} onChange={v=>update(r.id,"createdDate",v)}/> : r.createdDate}</td>
+                    <td style={tdS}>{editMode ? <InlineEdit value={r.key} onChange={v=>update(r.id,"key",v)}/> : r.key}</td>
+                    <td style={tdS}>{editMode ? <InlineEdit value={r.description} onChange={v=>update(r.id,"description",v)} multiline/> : <span style={{lineHeight:1.5}}>{r.description}</span>}</td>
+                    <td style={tdS}>{editMode ? <InlineEdit value={r.priority} onChange={v=>update(r.id,"priority",v)} options={BR_DEFECT_PRIORITIES}/> : <BRPriorityBadge priority={r.priority}/>}</td>
+                    <td style={tdS}>{editMode ? <InlineEdit value={r.launchBlocker} onChange={v=>update(r.id,"launchBlocker",v)} options={BR_IMPACTED_OPTIONS}/> : <YesNoPill value={r.launchBlocker}/>}</td>
+                    <td style={tdS}>{editMode ? <InlineEdit value={r.status} onChange={v=>update(r.id,"status",v)} options={BR_DEFECT_STATUSES}/> : <StatusBadge status={r.status}/>}</td>
+                    {editMode && <td style={{...tdS,textAlign:"center"}}><button onClick={()=>delRow(r.id)} style={{color:"#ef4444",background:"none",border:"none",cursor:"pointer",fontSize:14}}>✕</button></td>}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Summary: computed rollup with clickable stat cards ──────────────────────
+function BRSummaryTab({impact, uat, defects, onNavigate}) {
+  const total = impact.length;
+  const impacted = impact.filter(r=>r.impacted==="Yes").length;
+  const complete = impact.filter(r=>r.status==="Complete").length;
+  const pct = total ? Math.round((complete/total)*100) : 0;
+
+  const byStatus = {
+    "To Do": impact.filter(r=>r.status==="To Do").length,
+    "In Progress": impact.filter(r=>r.status==="In Progress").length,
+    "Complete": complete,
+    "Not Applicable": impact.filter(r=>r.status==="Not Applicable").length,
+  };
+  const statusColor = {"To Do":"#94a3b8","In Progress":"#3b82f6","Complete":"#22c55e","Not Applicable":"#cbd5e1"};
+
+  const cards = [
+    {label:"Total Items", val:total, color:"#0f172a", onClick:()=>onNavigate("Impact Assessment",{impacted:"All",status:"All"})},
+    {label:"Impacted", val:impacted, color:"#b45309", onClick:()=>onNavigate("Impact Assessment",{impacted:"Yes",status:"All"})},
+    {label:"Complete", val:complete, color:"#166534", onClick:()=>onNavigate("Impact Assessment",{impacted:"All",status:"Complete"})},
+    {label:"Overall Progress", val:pct+"%", color:"#0891b2", onClick:()=>onNavigate("Impact Assessment",{impacted:"All",status:"All"})},
+  ];
+
+  const uatDone = uat.filter(r=>r.status==="Validated"||r.status==="Complete").length;
+  const openDefects = defects.filter(r=>r.status!=="Closed").length;
+
+  return (
+    <div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
+        {cards.map(c => (
+          <div key={c.label} onClick={c.onClick} title="Click to view in Impact Assessment"
+            style={{background:"#fff",borderRadius:10,padding:"14px 16px",border:"1px solid #e2e8f0",
+              boxShadow:"0 1px 4px rgba(0,0,0,0.04)",cursor:"pointer",transition:"all 0.15s"}}
+            onMouseEnter={e=>e.currentTarget.style.boxShadow="0 4px 12px rgba(0,0,0,0.1)"}
+            onMouseLeave={e=>e.currentTarget.style.boxShadow="0 1px 4px rgba(0,0,0,0.04)"}>
+            <div style={{fontSize:24,fontWeight:800,color:c.color,marginBottom:2}}>{c.val}</div>
+            <div style={{fontSize:11,color:c.color,fontWeight:700,textTransform:"uppercase",letterSpacing:0.8}}>{c.label}</div>
+            <div style={{fontSize:9,color:"#94a3b8",marginTop:3}}>click to view items</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{background:"#fff",borderRadius:12,border:"1px solid #e2e8f0",boxShadow:"0 2px 8px rgba(0,0,0,0.05)",padding:"18px 20px",marginBottom:16}}>
+        <div style={{fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"#94a3b8",marginBottom:12}}>Impact Assessment — Status Breakdown</div>
+        <div style={{display:"flex",height:14,borderRadius:7,overflow:"hidden",marginBottom:14}}>
+          {Object.entries(byStatus).map(([k,v]) => v>0 && <div key={k} style={{flex:v,background:statusColor[k]}} title={`${k}: ${v}`}/>)}
+        </div>
+        <div style={{display:"flex",gap:20,flexWrap:"wrap"}}>
+          {Object.entries(byStatus).map(([k,v]) => (
+            <div key={k} style={{display:"flex",alignItems:"center",gap:6,cursor:"pointer"}}
+              onClick={()=>onNavigate("Impact Assessment",{impacted:"All",status:k})}>
+              <div style={{width:10,height:10,borderRadius:3,background:statusColor[k]}}/>
+              <span style={{fontSize:11,color:"#334155",fontWeight:600}}>{k}</span>
+              <span style={{fontSize:11,color:"#94a3b8"}}>{v}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:12}}>
+        <div onClick={()=>onNavigate("UAT")} style={{background:"#fff",borderRadius:10,padding:"14px 16px",border:"1px solid #e2e8f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)",cursor:"pointer"}}>
+          <div style={{fontSize:20,fontWeight:800,color:"#0f172a"}}>{uatDone} / {uat.length}</div>
+          <div style={{fontSize:11,color:"#64748b",fontWeight:700,textTransform:"uppercase",letterSpacing:0.8}}>UAT Test Cases Validated</div>
+        </div>
+        <div onClick={()=>onNavigate("Defects")} style={{background:"#fff",borderRadius:10,padding:"14px 16px",border:"1px solid #e2e8f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)",cursor:"pointer"}}>
+          <div style={{fontSize:20,fontWeight:800,color:openDefects>0?"#9f1239":"#166534"}}>{openDefects}</div>
+          <div style={{fontSize:11,color:"#64748b",fontWeight:700,textTransform:"uppercase",letterSpacing:0.8}}>Open Defects</div>
+        </div>
+      </div>
+
+      <div style={{marginTop:12,fontSize:11,color:"#94a3b8"}}>Computed live from Impact Assessment, UAT and Defects · sourced from the Visa Migration Business Readiness workbook</div>
+    </div>
+  );
+}
+
+// ── Business Readiness container: sub-tab pills across all 7 sections ──────
+function BusinessReadinessTab({br, setBr, editMode}) {
+  const [section, setSection] = useState("Summary");
+  const [impactFilter, setImpactFilter] = useState({impacted:"All", status:"All"});
+
+  function navigate(target, filter) {
+    if (filter) setImpactFilter(filter);
+    setSection(target);
+  }
+
+  return (
+    <div>
+      <SubTabPills sections={["Summary","Impact Assessment","Go-Live & Approvals","PIV & Prerequisites","Tech Setup","UAT","Defects"]} active={section} onChange={setSection}/>
+
+      {section==="Summary" && <BRSummaryTab impact={br.impact} uat={br.uat} defects={br.defects} onNavigate={navigate}/>}
+
+      {section==="Impact Assessment" && (
+        <BRImpactTab data={br.impact} setData={setBr.impact} editMode={editMode}
+          filterImpacted={impactFilter.impacted} setFilterImpacted={v=>setImpactFilter(f=>({...f,impacted:v}))}
+          filterStatus={impactFilter.status} setFilterStatus={v=>setImpactFilter(f=>({...f,status:v}))}/>
+      )}
+
+      {section==="Go-Live & Approvals" && (
+        <BRChecklistTab data={br.goLive} setData={setBr.goLive} editMode={editMode} grouped csvName="go-live-approvals.csv" itemLabel="Item"
+          columns={[{key:"item",label:"Item",multiline:true,width:280},{key:"comments",label:"Comments",multiline:true}]}/>
+      )}
+
+      {section==="PIV & Prerequisites" && (
+        <BRChecklistTab data={br.piv} setData={setBr.piv} editMode={editMode} csvName="piv-prerequisites.csv" itemLabel="Item"
+          columns={[{key:"item",label:"Prerequisite",multiline:true,width:280},{key:"comments",label:"Reference / Comments",multiline:true}]}/>
+      )}
+
+      {section==="Tech Setup" && (
+        <BRChecklistTab data={br.techSetup} setData={setBr.techSetup} editMode={editMode} csvName="tech-setup.csv" itemLabel="Setup Item"
+          columns={[{key:"item",label:"Setup Item",multiline:true,width:220},{key:"requestVia",label:"Request Via",multiline:true,width:220},{key:"details",label:"Details",multiline:true}]}/>
+      )}
+
+      {section==="UAT" && (
+        <BRChecklistTab data={br.uat} setData={setBr.uat} editMode={editMode} csvName="uat.csv" itemLabel="Test Case"
+          columns={[{key:"scope",label:"Scope",multiline:true},{key:"owner",label:"Owner",width:140},{key:"comments",label:"Comments",multiline:true,width:220}]}/>
+      )}
+
+      {section==="Defects" && <BRDefectsTab data={br.defects} setData={setBr.defects} editMode={editMode}/>}
     </div>
   );
 }
@@ -3971,6 +5196,12 @@ function App() {
   const [gantt, setGantt] = useState(DEFAULT_GANTT);
   const [techSpecs, setTechSpecs] = useState(DEFAULT_TECH_SPECS);
   const [techPlan, setTechPlan] = useState(DEFAULT_TECH_PLAN);
+  const [brImpact, setBrImpact] = useState(DEFAULT_BR_IMPACT);
+  const [brGoLive, setBrGoLive] = useState(DEFAULT_BR_GOLIVE);
+  const [brPiv, setBrPiv] = useState(DEFAULT_BR_PIV);
+  const [brTechSetup, setBrTechSetup] = useState(DEFAULT_BR_TECHSETUP);
+  const [brUat, setBrUat] = useState(DEFAULT_BR_UAT);
+  const [brDefects, setBrDefects] = useState(DEFAULT_BR_DEFECTS);
   const [faqs, setFaqs] = useState(DEFAULT_FAQS);
   const [cohortDefs, setCohortDefs] = useState(DEFAULT_COHORT_DEFS);
   const [orgName, setOrgName] = useState("");
@@ -4010,6 +5241,12 @@ function App() {
         if (isArr(s.gantt)) setGantt(s.gantt);
         if (isArr(s.techSpecs)) setTechSpecs(s.techSpecs);
         if (isArr(s.techPlan)) setTechPlan(s.techPlan);
+        if (isArr(s.brImpact)) setBrImpact(s.brImpact);
+        if (isArr(s.brGoLive)) setBrGoLive(s.brGoLive);
+        if (isArr(s.brPiv)) setBrPiv(s.brPiv);
+        if (isArr(s.brTechSetup)) setBrTechSetup(s.brTechSetup);
+        if (isArr(s.brUat)) setBrUat(s.brUat);
+        if (isArr(s.brDefects)) setBrDefects(s.brDefects);
         if (isArr(s.faqs)) setFaqs(s.faqs);
       }
     } catch(_) {}
@@ -4019,12 +5256,12 @@ function App() {
   useEffect(() => {
     if (!loaded) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, techSpecs, techPlan}));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, techSpecs, techPlan, brImpact, brGoLive, brPiv, brTechSetup, brUat, brDefects}));
       setSaveStatus("saved");
       const t = setTimeout(() => setSaveStatus("idle"), 1800);
       return () => clearTimeout(t);
     } catch(_) {}
-  }, [plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, techSpecs, techPlan, loaded]);
+  }, [plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, techSpecs, techPlan, brImpact, brGoLive, brPiv, brTechSetup, brUat, brDefects, loaded]);
 
   function pushUndo(snapshot) {
     setUndoStack(prev => {
@@ -4044,7 +5281,7 @@ function App() {
     });
   }
   function enterEditMode() {
-    setEditSnapshot({plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, techSpecs, techPlan});
+    setEditSnapshot({plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, techSpecs, techPlan, brImpact, brGoLive, brPiv, brTechSetup, brUat, brDefects});
     setUndoStack([]);
     setEditMode(true);
   }
@@ -4074,6 +5311,12 @@ function App() {
       if (editSnapshot.gantt) setGantt(editSnapshot.gantt);
       if (editSnapshot.techSpecs) setTechSpecs(editSnapshot.techSpecs);
       if (editSnapshot.techPlan) setTechPlan(editSnapshot.techPlan);
+      if (editSnapshot.brImpact) setBrImpact(editSnapshot.brImpact);
+      if (editSnapshot.brGoLive) setBrGoLive(editSnapshot.brGoLive);
+      if (editSnapshot.brPiv) setBrPiv(editSnapshot.brPiv);
+      if (editSnapshot.brTechSetup) setBrTechSetup(editSnapshot.brTechSetup);
+      if (editSnapshot.brUat) setBrUat(editSnapshot.brUat);
+      if (editSnapshot.brDefects) setBrDefects(editSnapshot.brDefects);
     }
     setShowDiscard(false);
     setEditSnapshot(null);
@@ -4090,6 +5333,7 @@ function App() {
       },
       plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle,
       cohortDefs, faqs, questions, gantt, techSpecs, techPlan,
+      brImpact, brGoLive, brPiv, brTechSetup, brUat, brDefects,
     };
     const b = new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
     const u = URL.createObjectURL(b);
@@ -4150,6 +5394,12 @@ function App() {
       applyArray("gantt", setGantt, "Project Plan");
       applyArray("techSpecs", setTechSpecs, "Technical Spec");
       applyArray("techPlan", setTechPlan, "Tech Requirements & Plan");
+      applyArray("brImpact", setBrImpact, "Business Readiness — Impact Assessment");
+      applyArray("brGoLive", setBrGoLive, "Business Readiness — Go-Live & Approvals");
+      applyArray("brPiv", setBrPiv, "Business Readiness — PIV & Prerequisites");
+      applyArray("brTechSetup", setBrTechSetup, "Business Readiness — Tech Setup");
+      applyArray("brUat", setBrUat, "Business Readiness — UAT");
+      applyArray("brDefects", setBrDefects, "Business Readiness — Defects");
 
       if (imported.length === 0 && skipped.length === 0) {
         alert("No recognised dashboard data found in this file.");
@@ -4199,7 +5449,7 @@ function App() {
     setComms(prev => { const next={...prev}; delete next[key]; return next; });
   }
 
-  const TABS = ["Plan & Timeline","Risks & Mitigations","Communication Plans","Open Questions","FAQs","Technical Spec & Plan"];
+  const TABS = ["Plan & Timeline","Risks & Mitigations","Communication Plans","Open Questions","FAQs","Technical Spec & Plan","Business Readiness"];
   if (!loaded) return <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",color:"#64748b",fontFamily:"'Sora',sans-serif"}}>Loading...</div>;
 
   return (
@@ -4271,6 +5521,10 @@ function App() {
         {tab===3 && <QuestionsTab data={questions} setData={setQuestions} editMode={editMode}/>}
         {tab===4 && <FAQsTab data={faqs} setData={setFaqs} editMode={editMode}/>}
         {tab===5 && <TechSpecPlanTab techSpecs={techSpecs} setTechSpecs={setTechSpecs} techPlan={techPlan} setTechPlan={setTechPlan} editMode={editMode}/>}
+        {tab===6 && <BusinessReadinessTab
+          br={{impact:brImpact, goLive:brGoLive, piv:brPiv, techSetup:brTechSetup, uat:brUat, defects:brDefects}}
+          setBr={{impact:setBrImpact, goLive:setBrGoLive, piv:setBrPiv, techSetup:setBrTechSetup, uat:setBrUat, defects:setBrDefects}}
+          editMode={editMode}/>}
       </div>
 
       {showDiscard && (
