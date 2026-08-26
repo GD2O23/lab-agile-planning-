@@ -3030,21 +3030,28 @@ const STAGE_COLORS = {
   "Activation":   {bg:"#dcfce7",text:"#166534",dot:"#22c55e"},
   "Post Go-Live": {bg:"#fee2e2",text:"#991b1b",dot:"#ef4444"},
 };
-const KEY_DATES = [
-  {date:"21 Aug 2026",label:"Awareness Comms",color:"#3b82f6"},
-  {date:"21 Sep 2026",label:"T&C Comms",color:"#8b5cf6"},
-  {date:"13 Oct 2026",label:"Card Mailout",color:"#f59e0b"},
-  {date:"21 Oct 2026",label:"D-7",color:"#f97316"},
-  {date:"25 Oct 2026",label:"D-3",color:"#ef4444"},
-  {date:"28 Oct 2026",label:"GO-LIVE",color:"#16a34a"},
-  {date:"4 Nov 2026",label:"D+7",color:"#dc2626"},
-  {date:"11 Nov 2026",label:"D+14",color:"#991b1b"},
+const DEFAULT_KEY_DATES = [
+  {id:"kd1",date:"21 Aug 2026",label:"Awareness Comms",color:"#3b82f6"},
+  {id:"kd2",date:"21 Sep 2026",label:"T&C Comms",color:"#8b5cf6"},
+  {id:"kd3",date:"13 Oct 2026",label:"Card Mailout",color:"#f59e0b"},
+  {id:"kd4",date:"21 Oct 2026",label:"D-7",color:"#f97316"},
+  {id:"kd5",date:"25 Oct 2026",label:"D-3",color:"#ef4444"},
+  {id:"kd6",date:"28 Oct 2026",label:"GO-LIVE",color:"#16a34a"},
+  {id:"kd7",date:"4 Nov 2026",label:"D+7",color:"#dc2626"},
+  {id:"kd8",date:"11 Nov 2026",label:"D+14",color:"#991b1b"},
 ];
 
 
-function JourneyTab({commsData, setCommsData, cohortDefs, cohortsRef, editMode}) {
+function JourneyTab({commsData, setCommsData, cohortDefs, cohortsRef, editMode, keyDates, setKeyDates}) {
   const [selectedCohort, setSelectedCohort] = useState("all");
   const [hoveredNode, setHoveredNode] = useState(null);
+
+  function updateKeyDate(id, field, val) { setKeyDates(prev => prev.map(kd => kd.id===id ? {...kd,[field]:val} : kd)); }
+  function addKeyDate() {
+    const PALETTE = ["#3b82f6","#8b5cf6","#f59e0b","#f97316","#ef4444","#16a34a","#dc2626","#991b1b","#0891b2","#7c3aed"];
+    setKeyDates(prev => [...prev, {id:mkId(), label:"New Date", date:"", color:PALETTE[prev.length % PALETTE.length]}]);
+  }
+  function delKeyDate(id) { setKeyDates(prev => prev.filter(kd => kd.id !== id)); }
 
   const cohorts = cohortsRef;
   const visibleCohorts = selectedCohort === "all"
@@ -3144,12 +3151,30 @@ function JourneyTab({commsData, setCommsData, cohortDefs, cohortsRef, editMode})
       <div style={{background:"#0f172a",borderRadius:"10px 10px 0 0",padding:"10px 20px",
         display:"flex",gap:16,flexWrap:"wrap",alignItems:"center"}}>
         <span style={{fontSize:10,fontWeight:700,color:"#64748b",letterSpacing:1.5,textTransform:"uppercase",marginRight:4}}>Key Dates</span>
-        {KEY_DATES.map((kd,i) => (
-          <div key={i} style={{display:"flex",alignItems:"center",gap:5}}>
-            <div style={{width:8,height:8,borderRadius:"50%",background:kd.color}}/>
-            <span style={{fontSize:10,color:"#94a3b8",whiteSpace:"nowrap"}}>{kd.label.replace("\n"," ")} <span style={{color:"#64748b"}}>{kd.date}</span></span>
+        {(keyDates||[]).map((kd) => (
+          <div key={kd.id} style={{display:"flex",alignItems:"center",gap:5}}>
+            <div style={{width:8,height:8,borderRadius:"50%",background:kd.color,flexShrink:0}}/>
+            {editMode ? (
+              <>
+                <input value={kd.label} onChange={e=>updateKeyDate(kd.id,"label",e.target.value)}
+                  style={{fontSize:10,color:"#e2e8f0",background:"transparent",border:"none",
+                    borderBottom:"1px solid rgba(255,255,255,0.3)",outline:"none",width:Math.max(60,kd.label.length*6+10),fontFamily:"inherit"}}/>
+                <input value={kd.date} onChange={e=>updateKeyDate(kd.id,"date",e.target.value)}
+                  style={{fontSize:10,color:"#94a3b8",background:"transparent",border:"none",
+                    borderBottom:"1px solid rgba(255,255,255,0.3)",outline:"none",width:70,fontFamily:"inherit"}}/>
+                <button onClick={()=>delKeyDate(kd.id)} title="Remove"
+                  style={{color:"#f87171",background:"none",border:"none",cursor:"pointer",fontSize:11,padding:0,lineHeight:1}}>✕</button>
+              </>
+            ) : (
+              <span style={{fontSize:10,color:"#94a3b8",whiteSpace:"nowrap"}}>{kd.label.replace("\n"," ")} <span style={{color:"#64748b"}}>{kd.date}</span></span>
+            )}
           </div>
         ))}
+        {editMode && (
+          <button onClick={addKeyDate}
+            style={{fontSize:10,fontWeight:600,color:"#94a3b8",background:"none",border:"1px solid #334155",
+              borderRadius:6,padding:"3px 8px",cursor:"pointer"}}>+ Add Date</button>
+        )}
         <div style={{marginLeft:"auto",display:"flex",gap:8,flexWrap:"wrap"}}>
           {Object.entries(STAGE_COLORS).map(([stage,sc]) => (
             <div key={stage} style={{display:"flex",alignItems:"center",gap:4}}>
@@ -5187,7 +5212,7 @@ function PlanTimelineTab({plan, setPlan, milestones, setMilestones, gantt, setGa
 }
 
 // ── Tab: Communication Plans (Timeline + Customer Journeys) ────────────────
-function CommsJourneyTab({comms, setComms, cohortDefs, updateCohortDef, addCohortDef, deleteCohortDef, editMode, subTabLabels, updateSubTabLabel, renamingTabs}) {
+function CommsJourneyTab({comms, setComms, cohortDefs, updateCohortDef, addCohortDef, deleteCohortDef, editMode, subTabLabels, updateSubTabLabel, renamingTabs, keyDates, setKeyDates}) {
   const [section, setSection] = useState("timeline");
   const labels = subTabLabels.comms || DEFAULT_SUBTAB_LABELS.comms;
   const sections = SUBTAB_KEYS.comms.map(k => ({key:k, label:labels[k] || DEFAULT_SUBTAB_LABELS.comms[k] || k}));
@@ -5197,7 +5222,7 @@ function CommsJourneyTab({comms, setComms, cohortDefs, updateCohortDef, addCohor
         renaming={renamingTabs} onRename={(k,v)=>updateSubTabLabel("comms",k,v)}/>
       {section==="timeline"
         ? <CommsTab data={comms} setData={setComms} cohortDefs={cohortDefs} updateCohortDef={updateCohortDef} addCohortDef={addCohortDef} deleteCohortDef={deleteCohortDef} editMode={editMode}/>
-        : <JourneyTab commsData={comms} setCommsData={setComms} cohortDefs={cohortDefs} cohortsRef={cohortDefs} editMode={editMode}/>}
+        : <JourneyTab commsData={comms} setCommsData={setComms} cohortDefs={cohortDefs} cohortsRef={cohortDefs} editMode={editMode} keyDates={keyDates} setKeyDates={setKeyDates}/>}
     </div>
   );
 }
@@ -5472,6 +5497,7 @@ function App() {
   const [brTechSetup, setBrTechSetup] = useState(DEFAULT_BR_TECHSETUP);
   const [brUat, setBrUat] = useState(DEFAULT_BR_UAT);
   const [brDefects, setBrDefects] = useState(DEFAULT_BR_DEFECTS);
+  const [keyDates, setKeyDates] = useState(DEFAULT_KEY_DATES);
   const [faqs, setFaqs] = useState(DEFAULT_FAQS);
   const [cohortDefs, setCohortDefs] = useState(DEFAULT_COHORT_DEFS);
   const [orgName, setOrgName] = useState("");
@@ -5528,6 +5554,7 @@ function App() {
         if (isArr(s.brTechSetup)) setBrTechSetup(s.brTechSetup);
         if (isArr(s.brUat)) setBrUat(s.brUat);
         if (isArr(s.brDefects)) setBrDefects(s.brDefects);
+        if (isArr(s.keyDates)) setKeyDates(s.keyDates);
         if (isArr(s.faqs)) setFaqs(s.faqs);
         if (isArr(s.tabLabels)) setTabLabels(s.tabLabels);
         if (isObj(s.subTabLabels)) setSubTabLabels(prev => ({...prev, ...s.subTabLabels}));
@@ -5539,12 +5566,12 @@ function App() {
   useEffect(() => {
     if (!loaded) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, techSpecs, techPlan, brImpact, brGoLive, brPiv, brTechSetup, brUat, brDefects, tabLabels, subTabLabels}));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, techSpecs, techPlan, brImpact, brGoLive, brPiv, brTechSetup, brUat, brDefects, tabLabels, subTabLabels, keyDates}));
       setSaveStatus("saved");
       const t = setTimeout(() => setSaveStatus("idle"), 1800);
       return () => clearTimeout(t);
     } catch(_) {}
-  }, [plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, techSpecs, techPlan, brImpact, brGoLive, brPiv, brTechSetup, brUat, brDefects, tabLabels, subTabLabels, loaded]);
+  }, [plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, techSpecs, techPlan, brImpact, brGoLive, brPiv, brTechSetup, brUat, brDefects, tabLabels, subTabLabels, keyDates, loaded]);
 
   function pushUndo(snapshot) {
     setUndoStack(prev => {
@@ -5564,7 +5591,7 @@ function App() {
     });
   }
   function enterEditMode() {
-    setEditSnapshot({plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, techSpecs, techPlan, brImpact, brGoLive, brPiv, brTechSetup, brUat, brDefects, tabLabels, subTabLabels});
+    setEditSnapshot({plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle, cohortDefs, faqs, questions, gantt, techSpecs, techPlan, brImpact, brGoLive, brPiv, brTechSetup, brUat, brDefects, tabLabels, subTabLabels, keyDates});
     setUndoStack([]);
     setRenamingTabs(false);
     setEditMode(true);
@@ -5602,6 +5629,7 @@ function App() {
       if (editSnapshot.brTechSetup) setBrTechSetup(editSnapshot.brTechSetup);
       if (editSnapshot.brUat) setBrUat(editSnapshot.brUat);
       if (editSnapshot.brDefects) setBrDefects(editSnapshot.brDefects);
+      if (editSnapshot.keyDates) setKeyDates(editSnapshot.keyDates);
       if (editSnapshot.tabLabels) setTabLabels(editSnapshot.tabLabels);
       if (editSnapshot.subTabLabels) setSubTabLabels(editSnapshot.subTabLabels);
     }
@@ -5622,7 +5650,7 @@ function App() {
       plan, risks, comms, milestones, bannerGoLive, bannerDeact, bannerNote, orgName, dashTitle,
       cohortDefs, faqs, questions, gantt, techSpecs, techPlan,
       brImpact, brGoLive, brPiv, brTechSetup, brUat, brDefects,
-      tabLabels, subTabLabels,
+      tabLabels, subTabLabels, keyDates,
     };
     const b = new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
     const u = URL.createObjectURL(b);
@@ -5691,6 +5719,7 @@ function App() {
       applyArray("brDefects", setBrDefects, "Business Readiness — Defects");
       applyArray("tabLabels", setTabLabels, "Tab titles");
       applyObject("subTabLabels", v => setSubTabLabels(prev => ({...prev, ...v})), "Sub-tab titles");
+      applyArray("keyDates", setKeyDates, "Key Dates");
 
       if (imported.length === 0 && skipped.length === 0) {
         alert("No recognised dashboard data found in this file.");
@@ -5845,7 +5874,8 @@ function App() {
           subTabLabels={subTabLabels} updateSubTabLabel={updateSubTabLabel} renamingTabs={renamingTabs}/>}
         {tab===1 && <RisksTab data={risks} setData={setRisksU} editMode={editMode}/>}
         {tab===2 && <CommsJourneyTab comms={comms} setComms={setCommsU} cohortDefs={cohortDefs} updateCohortDef={updateCohortDef} addCohortDef={addCohortDef} deleteCohortDef={deleteCohortDef} editMode={editMode}
-          subTabLabels={subTabLabels} updateSubTabLabel={updateSubTabLabel} renamingTabs={renamingTabs}/>}
+          subTabLabels={subTabLabels} updateSubTabLabel={updateSubTabLabel} renamingTabs={renamingTabs}
+          keyDates={keyDates} setKeyDates={setKeyDates}/>}
         {tab===3 && <QuestionsTab data={questions} setData={setQuestions} editMode={editMode}/>}
         {tab===4 && <FAQsTab data={faqs} setData={setFaqs} editMode={editMode}/>}
         {tab===5 && <TechSpecPlanTab techSpecs={techSpecs} setTechSpecs={setTechSpecs} techPlan={techPlan} setTechPlan={setTechPlan} editMode={editMode}
