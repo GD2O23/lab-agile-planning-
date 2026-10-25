@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CPS 230 Companion</title>
+<style>/*__STYLES__*/</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <h1>CPS 230 Companion</h1>
+    <p class="sub">Offline guide to APRA's Operational Risk Management standard</p>
+  </div>
+  <div class="context" aria-label="Your context">
+    <label>Entity type
+      <select id="entity">
+        <option value="">Any</option>
+        <option value="ADI">ADI</option>
+        <option value="GI">General insurer</option>
+        <option value="LI">Life insurer</option>
+        <option value="PHI">Private health insurer</option>
+        <option value="RSE">RSE licensee</option>
+      </select>
+    </label>
+    <label>Size
+      <select id="sfi">
+        <option value="">Any</option>
+        <option value="SFI">SFI</option>
+        <option value="non-SFI">Non-SFI</option>
+      </select>
+    </label>
+    <span id="net" class="net" title="Connection status"></span>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" data-tab="search" aria-selected="true">Search</button>
+  <button role="tab" data-tab="read">Read</button>
+  <button role="tab" data-tab="learn">Learn</button>
+  <button role="tab" data-tab="check">Impact checker</button>
+  <button role="tab" data-tab="reference">Reference</button>
+  <button role="tab" data-tab="sources">Sources</button>
+</nav>
+
+<main>
+  <section id="tab-search" class="panel">
+    <div class="searchbar">
+      <input id="q" type="search" placeholder="Search CPS 230 and CPG 230, e.g. vendor, tolerance, notify APRA" autocomplete="off">
+      <select id="f-source"><option value="">All sources</option><option value="CPS230">CPS 230 (standard)</option><option value="CPG230">CPG 230 (guidance)</option></select>
+      <select id="f-strength"><option value="">Any strength</option><option value="must">Must</option><option value="should">Should</option><option value="may">May</option></select>
+    </div>
+    <p id="expanded" class="hint"></p>
+    <ol id="results" class="results"></ol>
+  </section>
+
+  <section id="tab-read" class="panel" hidden>
+    <div class="read-layout">
+      <aside id="toc" class="toc"></aside>
+      <article id="reader" class="reader"></article>
+    </div>
+  </section>
+
+  <section id="tab-learn" class="panel" hidden>
+    <p class="empty">Lessons arrive in phase 3.</p>
+  </section>
+
+  <section id="tab-check" class="panel" hidden>
+    <p class="empty">The impact checker arrives in phase 4.</p>
+  </section>
+
+  <section id="tab-reference" class="panel" hidden>
+    <h2>Glossary</h2>
+    <dl id="glossary" class="glossary"></dl>
+  </section>
+
+  <section id="tab-sources" class="panel" hidden>
+    <h2>Where this information comes from</h2>
+    <p>All text in this tool is taken from APRA's official documents listed below. The official versions prevail. Links open when you are online.</p>
+    <div id="sources"></div>
+  </section>
+</main>
+
+<footer class="foot">
+  <span id="stamp"></span>
+  <span>Reference aid only. Not legal advice or compliance sign-off.</span>
+</footer>
+
+<script>/*__DATA__*/</script>
+<script>/*__APP__*/</script>
+</body>
+</html>

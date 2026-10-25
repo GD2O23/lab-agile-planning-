@@ -1,0 +1,89 @@
+:root {
+  --bg: #f7f7f5;
+  --surface: #ffffff;
+  --text: #1d1d1b;
+  --muted: #5f5f5a;
+  --line: #deded8;
+  --accent: #0b5d6b;
+  --accent-soft: #e2f0f2;
+  --mark: #fff1a8;
+  --must: #8a1c1c;
+  --should: #7a5a00;
+  --may: #2f5d2f;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161716;
+    --surface: #1f201f;
+    --text: #ececea;
+    --muted: #a3a39d;
+    --line: #34352f;
+    --accent: #5fc2d1;
+    --accent-soft: #1d3438;
+    --mark: #5a4d00;
+    --must: #f08a8a;
+    --should: #e6c260;
+    --may: #96d196;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+h1 { font-size: 1.3rem; margin: 0; }
+h2 { font-size: 1.1rem; }
+a { color: var(--accent); }
+button, input, select { font: inherit; color: inherit; }
+
+.top {
+  display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center;
+  padding: 16px; background: var(--surface); border-bottom: 1px solid var(--line);
+}
+.sub { margin: 2px 0 0; color: var(--muted); font-size: .9rem; }
+.context { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; font-size: .9rem; }
+.context select { margin-left: 6px; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; }
+.net { font-size: .8rem; padding: 2px 8px; border-radius: 10px; background: var(--accent-soft); }
+
+.tabs { display: flex; gap: 4px; padding: 0 16px; background: var(--surface); border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tabs button { border: 0; background: none; padding: 10px 12px; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; }
+.tabs button[aria-selected="true"] { border-bottom-color: var(--accent); font-weight: 600; }
+
+main { max-width: 1100px; margin: 0 auto; padding: 16px; }
+.searchbar { display: flex; flex-wrap: wrap; gap: 8px; }
+.searchbar input { flex: 1 1 280px; padding: 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+.searchbar select { padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+.hint { color: var(--muted); font-size: .85rem; min-height: 1.2em; }
+.empty { color: var(--muted); }
+
+.results { list-style: none; padding: 0; }
+.results li, .para {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px; margin-bottom: 10px;
+}
+.cite { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: .85rem; color: var(--muted); margin-bottom: 4px; }
+.cite strong { color: var(--text); }
+.tag { font-size: .75rem; padding: 1px 6px; border-radius: 4px; border: 1px solid currentColor; }
+.tag.must { color: var(--must); } .tag.should { color: var(--should); } .tag.may { color: var(--may); }
+mark { background: var(--mark); color: inherit; }
+.linkbtn { border: 0; background: none; color: var(--accent); cursor: pointer; padding: 0; text-decoration: underline; font-size: .85rem; }
+
+.read-layout { display: grid; grid-template-columns: 240px 1fr; gap: 16px; }
+.toc { font-size: .9rem; position: sticky; top: 8px; align-self: start; max-height: 85vh; overflow: auto; }
+.toc button { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 4px; cursor: pointer; }
+.toc button:hover { background: var(--accent-soft); }
+.para.focus { outline: 2px solid var(--accent); }
+@media (max-width: 720px) { .read-layout { grid-template-columns: 1fr; } .toc { position: static; max-height: none; } }
+
+.glossary dt { font-weight: 600; margin-top: 10px; }
+.glossary dd { margin: 2px 0 0; }
+.source-card { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px; margin-bottom: 10px; }
+.warn { color: var(--should); font-size: .85rem; }
+
+.foot { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; padding: 16px; color: var(--muted); font-size: .8rem; border-top: 1px solid var(--line); }
+
+@media print {
+  .tabs, .searchbar, .context, .toc { display: none; }
+  body { background: #fff; color: #000; }
+}

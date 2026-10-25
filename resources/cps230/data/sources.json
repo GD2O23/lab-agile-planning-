@@ -1,0 +1,39 @@
+[
+  {
+    "id": "CPS230",
+    "title": "Prudential Standard CPS 230 Operational Risk Management",
+    "publisher": "Australian Prudential Regulation Authority (APRA)",
+    "type": "Standard (binding)",
+    "version": "TO VERIFY",
+    "effective": "1 July 2025",
+    "links": [
+      {"label": "APRA Prudential Handbook", "url": "https://handbook.apra.gov.au/standard/cps-230"},
+      {"label": "Federal Register of Legislation", "url": "https://www.legislation.gov.au/F2023L01011/latest/text"}
+    ],
+    "verified": false
+  },
+  {
+    "id": "CPG230",
+    "title": "Prudential Practice Guide CPG 230 Operational Risk Management",
+    "publisher": "Australian Prudential Regulation Authority (APRA)",
+    "type": "Guidance (not binding)",
+    "version": "TO VERIFY",
+    "effective": "",
+    "links": [
+      {"label": "APRA Prudential Handbook", "url": "https://handbook.apra.gov.au/ppg/cpg-230"}
+    ],
+    "verified": false
+  },
+  {
+    "id": "APRA-ORM",
+    "title": "APRA operational risk management information page",
+    "publisher": "Australian Prudential Regulation Authority (APRA)",
+    "type": "Information page",
+    "version": "",
+    "effective": "",
+    "links": [
+      {"label": "APRA website", "url": "https://www.apra.gov.au/operational-risk-management"}
+    ],
+    "verified": false
+  }
+]

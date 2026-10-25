@@ -1,0 +1,5 @@
+[
+  {"id": "t1", "source": "CPS230", "para": "1", "heading": ["Test heading A"], "text": "TEST FIXTURE. A material service provider arrangement must be reviewed.", "strength": "must", "entities": [], "sfiOnly": false},
+  {"id": "t2", "source": "CPS230", "para": "2", "heading": ["Test heading B"], "text": "TEST FIXTURE. Tolerance level for disruption should be set.", "strength": "should", "entities": [], "sfiOnly": true},
+  {"id": "t3", "source": "CPG230", "para": "3", "heading": ["Test heading C"], "text": "TEST FIXTURE. Guidance about <script> escaping and notify APRA.", "strength": "may", "entities": ["ADI"], "sfiOnly": false}
+]
